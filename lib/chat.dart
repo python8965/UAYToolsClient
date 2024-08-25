@@ -35,9 +35,9 @@ class _UAYChatPageState extends ConsumerState<UAYChatPage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    // final channel = WebSocketChannel.connect(
-    //   Uri.parse('wss://localhost'),
-    // );
+    final channel = WebSocketChannel.connect(
+      Uri.parse('wss://localhost'),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -49,41 +49,102 @@ class _UAYChatPageState extends ConsumerState<UAYChatPage> {
         // the App.build method, and use it to set our appbar title.
         title: Text('UAYChatPage'),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-              // StreamBuilder(
-              //   stream: channel.stream,
-              //   builder: (context, snapshot) {
-              //     return Expanded(
-              //       child: ListView.builder(
-              //           itemCount: 20,
-              //           itemBuilder: (context, index) {
-              //             return Container(
-              //               height: 50,
-              //               color: Colors.amber,
-              //               child: Text("Sample Entry")
-              //             );
-              //           },
-              //       ),
-              //     );
-              //   }
-              // ),
+      body: Container(
+          decoration: const BoxDecoration(
+            color: Colors.amber,
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30)),
+          ),
+        child:
+            Column(
+              children: [
+                Flexible(
+                    fit: FlexFit.tight,
+                    child: StreamBuilder(
+                        stream: channel.stream,
+                        builder: (context, snapshot) {
+                            return ListView.builder(
+                              itemCount: 20,
+                              itemBuilder: (context, index) {
+                              return Container(
+                              height: 50,
+                              color: Colors.amber,
+                              child: Text("Sample Entry")
+                              );
+                              },
+                        );
+                  })
+                ),
 
-            TextField(
-              decoration: InputDecoration(
-                labelText: "전송",
-                hintText: "여기에 텍스트 입력",
-              ),
-              onChanged: (value) => setState(() {
-                sendText = value;
-              }),
+                sendMesssage()
+
+
+              ],
             )
-
-
-          ],
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+      ); // This trailing comma makes auto-formatting nicer for build methods.
   }
+
+
+  Widget sendMesssage() => Container(
+      decoration: const BoxDecoration(
+        boxShadow: [
+          BoxShadow(color: Color.fromARGB(18, 0, 0, 0), blurRadius: 10)
+        ],
+        color: Colors.amber,
+      ),
+      padding: const EdgeInsets.all(10.0),
+      child: Row(children: [
+        IconButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {},//onSendImagePressed,
+          icon: const Icon(Icons.camera_alt),
+          color: Colors.blue,
+          iconSize: 25,
+        ),
+        const SizedBox(
+          width: 10,
+        ),
+        Expanded(
+            child: TextField(
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                suffixIcon: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.send),
+                  color: Colors.blue,
+                  iconSize: 25,
+                ),
+                hintText: "Type your message here",
+                hintMaxLines: 1,
+                contentPadding:
+                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+                hintStyle: const TextStyle(
+                  fontSize: 16,
+                ),
+                fillColor: Colors.white,
+                filled: true,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                  borderSide: const BorderSide(
+                    color: Colors.white,
+                    width: 0.2,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                  borderSide: const BorderSide(
+                    color: Colors.black26,
+                    width: 0.2,
+                  ),
+                ),
+              ),
+              onChanged: (value) {
+                sendText = value;
+              },
+            )),
+      ]));
 }
