@@ -1,10 +1,24 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:http/http.dart' as http;
 
+class User {
+  final String username;
 
+  User(this.username);
+
+  User.fromJson(Map<String, dynamic> json)
+      : username = json['username'] as String;
+
+  Map<String, dynamic> toJson() => {
+    'username': username,
+  };
+}
 
 class UAYChatPage extends ConsumerStatefulWidget {
   const UAYChatPage({super.key});
@@ -22,6 +36,8 @@ class UAYChatPage extends ConsumerStatefulWidget {
   ConsumerState<UAYChatPage> createState() => _UAYChatPageState();
 }
 
+const String SERVER_LOCATION = "localhost:3000";
+
 class _UAYChatPageState extends ConsumerState<UAYChatPage> {
   String sendText = "";
   String TargetIP = "";
@@ -35,9 +51,19 @@ class _UAYChatPageState extends ConsumerState<UAYChatPage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
 
-    final channel = WebSocketChannel.connect(
-      Uri.parse('wss://localhost'),
-    );
+    Uri uri = Uri.http(SERVER_LOCATION, '/user/create');
+
+    var header = {
+      "Content-Type": "application/json",
+    };
+
+    var body = jsonEncode({
+      'username': "Test",
+    });
+
+    http.post(uri, headers: header, body: body );
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -61,20 +87,16 @@ class _UAYChatPageState extends ConsumerState<UAYChatPage> {
               children: [
                 Flexible(
                     fit: FlexFit.tight,
-                    child: StreamBuilder(
-                        stream: channel.stream,
-                        builder: (context, snapshot) {
-                            return ListView.builder(
-                              itemCount: 20,
-                              itemBuilder: (context, index) {
-                              return Container(
-                              height: 50,
-                              color: Colors.amber,
-                              child: Text("Sample Entry")
-                              );
-                              },
-                        );
-                  })
+                    child: ListView.builder(
+              itemCount: 20,
+              itemBuilder: (context, index) {
+                return Container(
+                    height: 50,
+                    color: Colors.amber,
+                    child: Text("Sample Entry")
+                );
+              },
+            )
                 ),
 
                 sendMesssage()
