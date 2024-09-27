@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'chat_page.freezed.dart';
 part 'chat_page.g.dart';
@@ -16,7 +17,25 @@ class Message with _$Message {
 
   factory Message.fromJson(Map<String, Object?> json) => _$MessageFromJson(json);
 
+  static Message fromText(String message){
+    return Message(username: "Test", content: message, timestamp: DateTime.now());
+  }
+
 }
+
+
+@riverpod
+class MessageNotifier extends _$MessageNotifier {
+  @override
+  List<Message> build() {
+    return [];
+  }
+
+  void AddMessage(Message message){
+    state.add(message);
+  }
+}
+
 
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -29,17 +48,29 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   final String currentUsername = "TestUser"; // 현재 사용자 이름
+  final FocusNode textEditFocusNode = FocusNode();
 
   void _sendMessage() {
     final text = _controller.text.trim();
+    ref.read(messageNotifierProvider.notifier).AddMessage(Message.fromText(text));
 
+    debugPrint(ref.watch(messageNotifierProvider).toString());
+    _controller.text = "";
+    textEditFocusNode.requestFocus();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // "ref" can be used in all life-cycles of a StatefulWidget.
   }
 
   @override
   Widget build(BuildContext context) {
-    final messages = [
-      Message(username: "AKETON", content: "Test01", timestamp: DateTime(0))
-    ];
+
+    final messages = ref.watch(messageNotifierProvider);
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -67,7 +98,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
                   final message = messages[messages.length - 1 - index];
-                  final isMe = message.username == currentUsername;
                   return _buildMessageTile(message);
                 },
               ),
@@ -94,6 +124,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                     child: TextField(
                       controller: _controller,
+                      focusNode: textEditFocusNode,
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         hintText: '메시지를 입력하세요...',

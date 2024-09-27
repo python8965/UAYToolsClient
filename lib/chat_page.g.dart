@@ -19,3 +19,26 @@ Map<String, dynamic> _$$MessageImplToJson(_$MessageImpl instance) =>
       'content': instance.content,
       'timestamp': instance.timestamp.toIso8601String(),
     };
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+String _$messageNotifierHash() => r'49ddeefb0b8b6e8e0a83866f6cb5ca318b823219';
+
+/// See also [MessageNotifier].
+@ProviderFor(MessageNotifier)
+final messageNotifierProvider =
+    AutoDisposeNotifierProvider<MessageNotifier, List<Message>>.internal(
+  MessageNotifier.new,
+  name: r'messageNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$messageNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$MessageNotifier = AutoDisposeNotifier<List<Message>>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
