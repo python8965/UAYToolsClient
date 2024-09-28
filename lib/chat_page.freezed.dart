@@ -20,9 +20,11 @@ Message _$MessageFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Message {
+  String get uuid => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
   String get content => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
+  bool get isDisplayMetadata => throw _privateConstructorUsedError;
 
   /// Serializes this Message to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -38,7 +40,12 @@ abstract class $MessageCopyWith<$Res> {
   factory $MessageCopyWith(Message value, $Res Function(Message) then) =
       _$MessageCopyWithImpl<$Res, Message>;
   @useResult
-  $Res call({String username, String content, DateTime timestamp});
+  $Res call(
+      {String uuid,
+      String username,
+      String content,
+      DateTime timestamp,
+      bool isDisplayMetadata});
 }
 
 /// @nodoc
@@ -56,11 +63,17 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? uuid = null,
     Object? username = null,
     Object? content = null,
     Object? timestamp = null,
+    Object? isDisplayMetadata = null,
   }) {
     return _then(_value.copyWith(
+      uuid: null == uuid
+          ? _value.uuid
+          : uuid // ignore: cast_nullable_to_non_nullable
+              as String,
       username: null == username
           ? _value.username
           : username // ignore: cast_nullable_to_non_nullable
@@ -73,6 +86,10 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      isDisplayMetadata: null == isDisplayMetadata
+          ? _value.isDisplayMetadata
+          : isDisplayMetadata // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -84,7 +101,12 @@ abstract class _$$MessageImplCopyWith<$Res> implements $MessageCopyWith<$Res> {
       __$$MessageImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String username, String content, DateTime timestamp});
+  $Res call(
+      {String uuid,
+      String username,
+      String content,
+      DateTime timestamp,
+      bool isDisplayMetadata});
 }
 
 /// @nodoc
@@ -100,11 +122,17 @@ class __$$MessageImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? uuid = null,
     Object? username = null,
     Object? content = null,
     Object? timestamp = null,
+    Object? isDisplayMetadata = null,
   }) {
     return _then(_$MessageImpl(
+      uuid: null == uuid
+          ? _value.uuid
+          : uuid // ignore: cast_nullable_to_non_nullable
+              as String,
       username: null == username
           ? _value.username
           : username // ignore: cast_nullable_to_non_nullable
@@ -117,6 +145,10 @@ class __$$MessageImplCopyWithImpl<$Res>
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      isDisplayMetadata: null == isDisplayMetadata
+          ? _value.isDisplayMetadata
+          : isDisplayMetadata // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -125,21 +157,29 @@ class __$$MessageImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$MessageImpl implements _Message {
   const _$MessageImpl(
-      {required this.username, required this.content, required this.timestamp});
+      {required this.uuid,
+      required this.username,
+      required this.content,
+      required this.timestamp,
+      required this.isDisplayMetadata});
 
   factory _$MessageImpl.fromJson(Map<String, dynamic> json) =>
       _$$MessageImplFromJson(json);
 
+  @override
+  final String uuid;
   @override
   final String username;
   @override
   final String content;
   @override
   final DateTime timestamp;
+  @override
+  final bool isDisplayMetadata;
 
   @override
   String toString() {
-    return 'Message(username: $username, content: $content, timestamp: $timestamp)';
+    return 'Message(uuid: $uuid, username: $username, content: $content, timestamp: $timestamp, isDisplayMetadata: $isDisplayMetadata)';
   }
 
   @override
@@ -147,16 +187,20 @@ class _$MessageImpl implements _Message {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$MessageImpl &&
+            (identical(other.uuid, uuid) || other.uuid == uuid) &&
             (identical(other.username, username) ||
                 other.username == username) &&
             (identical(other.content, content) || other.content == content) &&
             (identical(other.timestamp, timestamp) ||
-                other.timestamp == timestamp));
+                other.timestamp == timestamp) &&
+            (identical(other.isDisplayMetadata, isDisplayMetadata) ||
+                other.isDisplayMetadata == isDisplayMetadata));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, username, content, timestamp);
+  int get hashCode => Object.hash(
+      runtimeType, uuid, username, content, timestamp, isDisplayMetadata);
 
   /// Create a copy of Message
   /// with the given fields replaced by the non-null parameter values.
@@ -176,18 +220,24 @@ class _$MessageImpl implements _Message {
 
 abstract class _Message implements Message {
   const factory _Message(
-      {required final String username,
+      {required final String uuid,
+      required final String username,
       required final String content,
-      required final DateTime timestamp}) = _$MessageImpl;
+      required final DateTime timestamp,
+      required final bool isDisplayMetadata}) = _$MessageImpl;
 
   factory _Message.fromJson(Map<String, dynamic> json) = _$MessageImpl.fromJson;
 
+  @override
+  String get uuid;
   @override
   String get username;
   @override
   String get content;
   @override
   DateTime get timestamp;
+  @override
+  bool get isDisplayMetadata;
 
   /// Create a copy of Message
   /// with the given fields replaced by the non-null parameter values.
