@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:logger/logger.dart';
 import 'package:uay_tools/chat.dart';
+import 'package:uay_tools/request.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import 'chat_page.dart';
+import 'chat.dart';
+
 
 
 const webUrl = "";
 
 void main() {
   runApp(
-      const ProviderScope(
-          child: MyApp()
+      ProviderScope(
+          observers: [
+            //MyObserver(),
+          ],
+          child: const MyApp()
       )
   );
 }

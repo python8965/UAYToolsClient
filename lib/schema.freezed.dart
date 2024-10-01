@@ -21,7 +21,7 @@ Message _$MessageFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Message {
   String get id => throw _privateConstructorUsedError;
-  User get user => throw _privateConstructorUsedError;
+  User get author => throw _privateConstructorUsedError;
   String get content => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
 
@@ -39,9 +39,9 @@ abstract class $MessageCopyWith<$Res> {
   factory $MessageCopyWith(Message value, $Res Function(Message) then) =
       _$MessageCopyWithImpl<$Res, Message>;
   @useResult
-  $Res call({String id, User user, String content, DateTime timestamp});
+  $Res call({String id, User author, String content, DateTime timestamp});
 
-  $UserCopyWith<$Res> get user;
+  $UserCopyWith<$Res> get author;
 }
 
 /// @nodoc
@@ -60,7 +60,7 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
   @override
   $Res call({
     Object? id = null,
-    Object? user = null,
+    Object? author = null,
     Object? content = null,
     Object? timestamp = null,
   }) {
@@ -69,9 +69,9 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      user: null == user
-          ? _value.user
-          : user // ignore: cast_nullable_to_non_nullable
+      author: null == author
+          ? _value.author
+          : author // ignore: cast_nullable_to_non_nullable
               as User,
       content: null == content
           ? _value.content
@@ -88,9 +88,9 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $UserCopyWith<$Res> get user {
-    return $UserCopyWith<$Res>(_value.user, (value) {
-      return _then(_value.copyWith(user: value) as $Val);
+  $UserCopyWith<$Res> get author {
+    return $UserCopyWith<$Res>(_value.author, (value) {
+      return _then(_value.copyWith(author: value) as $Val);
     });
   }
 }
@@ -102,10 +102,10 @@ abstract class _$$MessageImplCopyWith<$Res> implements $MessageCopyWith<$Res> {
       __$$MessageImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, User user, String content, DateTime timestamp});
+  $Res call({String id, User author, String content, DateTime timestamp});
 
   @override
-  $UserCopyWith<$Res> get user;
+  $UserCopyWith<$Res> get author;
 }
 
 /// @nodoc
@@ -122,7 +122,7 @@ class __$$MessageImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? user = null,
+    Object? author = null,
     Object? content = null,
     Object? timestamp = null,
   }) {
@@ -131,9 +131,9 @@ class __$$MessageImplCopyWithImpl<$Res>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      user: null == user
-          ? _value.user
-          : user // ignore: cast_nullable_to_non_nullable
+      author: null == author
+          ? _value.author
+          : author // ignore: cast_nullable_to_non_nullable
               as User,
       content: null == content
           ? _value.content
@@ -152,7 +152,7 @@ class __$$MessageImplCopyWithImpl<$Res>
 class _$MessageImpl implements _Message {
   const _$MessageImpl(
       {required this.id,
-      required this.user,
+      required this.author,
       required this.content,
       required this.timestamp});
 
@@ -162,7 +162,7 @@ class _$MessageImpl implements _Message {
   @override
   final String id;
   @override
-  final User user;
+  final User author;
   @override
   final String content;
   @override
@@ -170,7 +170,7 @@ class _$MessageImpl implements _Message {
 
   @override
   String toString() {
-    return 'Message(id: $id, user: $user, content: $content, timestamp: $timestamp)';
+    return 'Message(id: $id, author: $author, content: $content, timestamp: $timestamp)';
   }
 
   @override
@@ -179,7 +179,7 @@ class _$MessageImpl implements _Message {
         (other.runtimeType == runtimeType &&
             other is _$MessageImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.user, user) || other.user == user) &&
+            (identical(other.author, author) || other.author == author) &&
             (identical(other.content, content) || other.content == content) &&
             (identical(other.timestamp, timestamp) ||
                 other.timestamp == timestamp));
@@ -187,7 +187,7 @@ class _$MessageImpl implements _Message {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, user, content, timestamp);
+  int get hashCode => Object.hash(runtimeType, id, author, content, timestamp);
 
   /// Create a copy of Message
   /// with the given fields replaced by the non-null parameter values.
@@ -208,7 +208,7 @@ class _$MessageImpl implements _Message {
 abstract class _Message implements Message {
   const factory _Message(
       {required final String id,
-      required final User user,
+      required final User author,
       required final String content,
       required final DateTime timestamp}) = _$MessageImpl;
 
@@ -217,7 +217,7 @@ abstract class _Message implements Message {
   @override
   String get id;
   @override
-  User get user;
+  User get author;
   @override
   String get content;
   @override

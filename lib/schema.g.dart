@@ -9,7 +9,7 @@ part of 'schema.dart';
 _$MessageImpl _$$MessageImplFromJson(Map<String, dynamic> json) =>
     _$MessageImpl(
       id: json['id'] as String,
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
+      author: User.fromJson(json['author'] as Map<String, dynamic>),
       content: json['content'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
@@ -17,7 +17,7 @@ _$MessageImpl _$$MessageImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$MessageImplToJson(_$MessageImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'user': instance.user,
+      'author': instance.author,
       'content': instance.content,
       'timestamp': instance.timestamp.toIso8601String(),
     };

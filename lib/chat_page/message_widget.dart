@@ -3,7 +3,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import '../chat_page.dart';
+import '../chat.dart';
 import '../context_menu.dart';
 
 class MessageWidget extends ConsumerStatefulWidget{
@@ -88,7 +88,7 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
                         ? CircleAvatar(
                       backgroundColor: Colors.blueAccent,
                       child: Text(
-                        messageData.message.user.username[0].toUpperCase(),
+                        messageData.message.author.username[0].toUpperCase(),
                         style: TextStyle(color: colorScheme.onPrimary),
                       ),
                     )
@@ -102,7 +102,7 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
                             Row(
                               children: [
                                 Text(
-                                  messageData.message.user.username,
+                                  messageData.message.author.username,
                                   style: TextStyle(
                                     color: colorScheme.onSurface,
                                     fontSize: 12,

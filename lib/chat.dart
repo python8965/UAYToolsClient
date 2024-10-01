@@ -1,172 +1,350 @@
+// chat.dart
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:http/http.dart' as http;
+import 'package:json_annotation/json_annotation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uay_tools/chat_page/message_widget.dart';
+import 'package:uay_tools/request.dart';
+import 'package:uay_tools/schema.dart';
+import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:http/http.dart' as http;
 
-class User {
-  final String username;
+import 'main.dart';
+import 'tools.dart';
 
-  User(this.username);
+part 'chat.g.dart';
 
-  User.fromJson(Map<String, dynamic> json)
-      : username = json['username'] as String;
-
-  Map<String, dynamic> toJson() => {
-    'username': username,
-  };
-}
-
-class UAYChatPage extends ConsumerStatefulWidget {
-  const UAYChatPage({super.key});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
+@riverpod
+class MessagesRepository extends _$MessagesRepository {
   @override
-  ConsumerState<UAYChatPage> createState() => _UAYChatPageState();
-}
+  List<MessageData> build() => [];
 
-const String SERVER_LOCATION = "localhost:3000";
+  Future<bool> loadMessages() async {
+    var queryParams = {
+        "amount": '100',
+    };
 
-class _UAYChatPageState extends ConsumerState<UAYChatPage> {
-  String sendText = "";
-  String TargetIP = "";
+    Uri uri = Uri.http(SERVER_LOCATION, '/messages', queryParams);
 
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    logger.d(uri.toString());
 
-    Uri uri = Uri.http(SERVER_LOCATION, '/user/create');
+    var header = {
+      "Content-Type": "application/json; charset=UTF-8",
+      "charset": "UTF-8",
+    };
+
+    var response = await http.get(uri, headers: header);
+
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+
+
+
+      List<MessageData> messageDatas = [];
+
+
+      MessageContext messageContext = MessageContext(DateTime.timestamp(), const Uuid().v4());
+
+      for (var data in json["messages"]){
+        var message = Message.fromJson(data);
+        var (messageData, ctx) = MessageData.fromMessage(message, messageContext);
+
+        messageContext = ctx;
+
+        messageDatas.add(messageData);
+      }
+
+      state = messageDatas;
+
+      return true;
+    } else {
+      logger.w("cannot receive messages");
+
+      return false;
+    }
+  }
+
+  Future<bool> addMessage(MessageData message) async {
+    Uri uri = Uri.http(SERVER_LOCATION, '/messages');
 
     var header = {
       "Content-Type": "application/json",
     };
 
-    var body = jsonEncode({
-      'username': "Test",
-    });
+    var body = jsonEncode(message.message);
 
-    http.post(uri, headers: header, body: body );
+    var response = await http.post(uri, headers: header, body:  body);
+
+    if (response.statusCode == 200) {
+      state = [message, ...state.take(99)];
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> removeMessage(MessageData message) async {
+    Uri uri = Uri.http(SERVER_LOCATION, '/messages/${message.message.id}');
+
+    var header = {
+      "Content-Type": "application/json",
+    };
+
+    var response = await http.delete(uri, headers: header);
+
+    if (response.statusCode == 200) {
+      final index = state.indexWhere((x) => x.message.id == message.message.id);
+
+      if (state[index].isSpacing && !state[index].isDisplayMetadata){
+        state.elementAtOrNull(index + 1)?.isSpacing = true;
+      }
+
+      if (state[index].isDisplayMetadata){
+        if (index - 1 < 0) {state.elementAtOrNull(index - 1);}
+      }
+
+      state.removeAt(index);
+      state = [...state];
+
+      return true;
+    } else {
+      return false;
+    }
+
+  }
+}
+
+class MessageData {
+  bool isDisplayMetadata;
+  bool isSpacing;
+  Message message;
+
+  MessageData({required this.message, required this.isDisplayMetadata, required this.isSpacing});
+
+  @override
+  String toString() {
+    return message.toString();
+  }
+
+  static (MessageData, MessageContext)  fromMessage(Message message, MessageContext messageContext) {
+    final timestamp = message.timestamp;
+
+    MessageData data = MessageData(message: message, isDisplayMetadata: true, isSpacing: false);
+
+    final diffTime = timestamp.difference(messageContext.previousTime).abs();
+
+    if (diffTime < const Duration(seconds: 2) &&
+        messageContext.id == message.author.id) { // 2초 이내에 채팅을 쳤다면 context 초기화
+      messageContext = MessageContext(timestamp, message.author.id);
+      data.isDisplayMetadata = false;
+      data.isSpacing = false;
+    } else if (diffTime < const Duration(seconds: 10) &&
+        messageContext.id == message.author.id) {
+      data.isDisplayMetadata = false;
+      data.isSpacing = false;
+    }
+
+    if (diffTime > const Duration(seconds: 10) || messageContext.id != message.author.id) { // 10초가 지났다면 띄움
+      messageContext = MessageContext(timestamp, message.author.id);
+    }
+
+    logger.i([diffTime, data.isDisplayMetadata, data.isSpacing, messageContext.id]);
+
+    return (data, messageContext);
+  }
+}
+
+class MessageContext {
+  final DateTime previousTime;
+  final String id;
+
+  MessageContext(this.previousTime, this.id);
+}
 
 
+
+
+
+class ChatPage extends ConsumerStatefulWidget {
+  const ChatPage({super.key});
+
+  @override
+  ConsumerState<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends ConsumerState<ChatPage> {
+  final TextEditingController _controller = TextEditingController();
+  final String currentUsername = "TestUser"; // 현재 사용자 이름
+  final FocusNode textEditFocusNode = FocusNode();
+
+  String? myUuid;
+  int? hoverID;
+
+  MessageContext messageContext = MessageContext(DateTime.timestamp(), const Uuid().v4());
+  bool isLoaded = false;
+
+  void _sendMessage() async  {
+    final text = _controller.text.trim();
+
+
+    if (text.isNotEmpty && myUuid != null) {
+
+      final timestamp = DateTime.timestamp();
+
+      final uuid = myUuid!;
+
+      final message = Message(id: const Uuid().v4(), author: User(id: uuid, username: "TestUser"), content: text, timestamp: timestamp);
+
+
+      var (messageData, ctx) = MessageData.fromMessage(message, messageContext);
+      messageContext= ctx;
+
+      bool v = await ref.watch(messagesRepositoryProvider.notifier).addMessage(messageData);
+
+
+      if (!v) {
+        final snackBar = SnackBar(
+          content: Text(uuid),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              // Some code to undo the change.
+            },
+          ),
+        );
+
+        if(context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
+      }
+        // Find the ScaffoldMessenger in the widget tree
+        // and use it to show a SnackBar.
+      //debugPrint(ref.watch(messagesRepositoryProvider).toString());
+      _controller.text = "";
+
+    }
+
+    textEditFocusNode.requestFocus();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // "ref" can be used in all life-cycles of a StatefulWidget.
+
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final messages = ref.watch(messagesRepositoryProvider);
+
+    if (!isLoaded) {
+      ref.watch(messagesRepositoryProvider.notifier).loadMessages();
+      isLoaded = true;
+    }
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final AsyncValue<User> userId = ref.watch(getUserProvider);
+
+    myUuid = userId.value?.id;
 
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text('UAYChatPage'),
+        title: const Text('단일 서버 채팅'),
+        actions: [
+            switch (userId) {
+
+              // TODO: Handle this case.
+              AsyncData(:final value) => Text(value.toString()),
+              AsyncError() => const Text("Error Username"),
+             _ => const CircularProgressIndicator()
+            }
+        ],
+        backgroundColor: colorScheme.surfaceContainerLowest,
       ),
-      body: Container(
-          decoration: const BoxDecoration(
-            color: Colors.amber,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30)),
+      body: Column(
+        children: [
+          // 채팅 이력 표시
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh
+              ),
+              child: messages.isEmpty
+                  ? Center(
+                      child: Text(
+                        '메시지가 없습니다.',
+                        style: TextStyle(color: colorScheme.onSurface  ),
+                      ),
+                    )
+                  : ListView.builder(
+                      reverse: true,
+                      padding: const EdgeInsets.all(0.0),
+                      itemCount: messages.length,
+                      scrollDirection: Axis.vertical,
+                      itemBuilder: (context, index) {
+
+                        final message = messages[index];
+
+
+                        //final nextMessage = message.length messages[messages.length-1 - index - 1];
+                        return MessageWidget(message);
+                      },
+                    ),
+            ),
           ),
-        child:
-            Column(
+          // 메시지 입력 필드
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+            color: colorScheme.surfaceContainerHigh,
+            child: Row(
               children: [
-                Flexible(
-                    fit: FlexFit.tight,
-                    child: ListView.builder(
-              itemCount: 20,
-              itemBuilder: (context, index) {
-                return Container(
-                    height: 50,
-                    color: Colors.amber,
-                    child: Text("Sample Entry")
-                );
-              },
-            )
+                IconButton(
+                  icon: Icon(Icons.add, color: colorScheme.onSurface),
+                  onPressed: () {
+                    // 이미지 업로드 등 추가 기능
+                  },
                 ),
-
-                sendMesssage()
-
-
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: textEditFocusNode,
+                      style: TextStyle(color: colorScheme.onSurface),
+                      decoration: InputDecoration(
+                        hintText: '메시지를 입력하세요...',
+                        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                        border: InputBorder.none,
+                      ),
+                      textCapitalization: TextCapitalization.sentences,
+                      onSubmitted: (_) => _sendMessage(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                IconButton(
+                  icon: Icon(Icons.send, color: colorScheme.onSurface),
+                  onPressed: _sendMessage,
+                ),
               ],
-            )
-        ),
-      ); // This trailing comma makes auto-formatting nicer for build methods.
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
+  // 타임스탬프 형식 지정 함수
 
-  Widget sendMesssage() => Container(
-      decoration: const BoxDecoration(
-        boxShadow: [
-          BoxShadow(color: Color.fromARGB(18, 0, 0, 0), blurRadius: 10)
-        ],
-        color: Colors.amber,
-      ),
-      padding: const EdgeInsets.all(10.0),
-      child: Row(children: [
-        IconButton(
-          padding: EdgeInsets.zero,
-          onPressed: () {},//onSendImagePressed,
-          icon: const Icon(Icons.camera_alt),
-          color: Colors.blue,
-          iconSize: 25,
-        ),
-        const SizedBox(
-          width: 10,
-        ),
-        Expanded(
-            child: TextField(
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                suffixIcon: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.send),
-                  color: Colors.blue,
-                  iconSize: 25,
-                ),
-                hintText: "Type your message here",
-                hintMaxLines: 1,
-                contentPadding:
-                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
-                hintStyle: const TextStyle(
-                  fontSize: 16,
-                ),
-                fillColor: Colors.white,
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                  borderSide: const BorderSide(
-                    color: Colors.white,
-                    width: 0.2,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                  borderSide: const BorderSide(
-                    color: Colors.black26,
-                    width: 0.2,
-                  ),
-                ),
-              ),
-              onChanged: (value) {
-                sendText = value;
-              },
-            )),
-      ]));
 }
