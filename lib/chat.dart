@@ -51,9 +51,8 @@ class MessagesRepository extends _$MessagesRepository {
 
       for (var data in json["messages"]){
         var message = Message.fromJson(data);
-        var (messageData, ctx) = MessageData.fromMessage(message, messageContext);
 
-        messageContext = ctx;
+        var messageData = messageContext.newMessageDataFromContext(message, messageDatas.lastOrNull);
 
         messageDatas.add(messageData);
       }
@@ -80,7 +79,7 @@ class MessagesRepository extends _$MessagesRepository {
     var response = await http.post(uri, headers: header, body:  body);
 
     if (response.statusCode == 200) {
-      state = [message, ...state.take(99)];
+      state = [...state.take(99), message];
       return true;
     } else {
       return false;
@@ -125,44 +124,55 @@ class MessageData {
 
   MessageData({required this.message, required this.isDisplayMetadata, required this.isSpacing});
 
+
+
   @override
   String toString() {
-    return message.toString();
-  }
-
-  static (MessageData, MessageContext)  fromMessage(Message message, MessageContext messageContext) {
-    final timestamp = message.timestamp;
-
-    MessageData data = MessageData(message: message, isDisplayMetadata: true, isSpacing: false);
-
-    final diffTime = timestamp.difference(messageContext.previousTime).abs();
-
-    if (diffTime < const Duration(seconds: 2) &&
-        messageContext.id == message.author.id) { // 2초 이내에 채팅을 쳤다면 context 초기화
-      messageContext = MessageContext(timestamp, message.author.id);
-      data.isDisplayMetadata = false;
-      data.isSpacing = false;
-    } else if (diffTime < const Duration(seconds: 10) &&
-        messageContext.id == message.author.id) {
-      data.isDisplayMetadata = false;
-      data.isSpacing = false;
-    }
-
-    if (diffTime > const Duration(seconds: 10) || messageContext.id != message.author.id) { // 10초가 지났다면 띄움
-      messageContext = MessageContext(timestamp, message.author.id);
-    }
-
-    logger.i([diffTime, data.isDisplayMetadata, data.isSpacing, messageContext.id]);
-
-    return (data, messageContext);
+    return [message.toString(), isDisplayMetadata, isSpacing].toString();
   }
 }
 
 class MessageContext {
-  final DateTime previousTime;
-  final String id;
+  DateTime previousTime;
+  String previousId;
 
-  MessageContext(this.previousTime, this.id);
+  MessageContext(this.previousTime, this.previousId);
+
+  MessageData newMessageDataFromContext(Message message, MessageData? previousMessageData) {
+    final timestamp = message.timestamp;
+
+
+    MessageData data = MessageData(message: message, isDisplayMetadata: true, isSpacing: false);
+
+    final diffTime = timestamp.difference(previousTime).abs();
+
+    if (diffTime < const Duration(seconds: 2) &&
+        previousId == message.author.id) { // 2초 이내에 채팅을 쳤다면 context 초기화
+      previousTime = timestamp;
+      previousId = message.author.id;
+      data.isDisplayMetadata = false;
+      data.isSpacing = false;
+    } else if (diffTime < const Duration(seconds: 10) &&
+        previousId == message.author.id) {
+      data.isDisplayMetadata = false;
+      data.isSpacing = false;
+    }
+
+    if (diffTime > const Duration(seconds: 10) || previousId != message.author.id) { // 10초가 지났다면 띄움
+      previousTime = timestamp;
+      previousId = message.author.id;
+    }
+
+    if (data.isDisplayMetadata) {
+      previousMessageData?.isSpacing = true;
+    }
+
+    logger.i([diffTime, data.isDisplayMetadata, data.isSpacing, previousId, previousMessageData]);
+
+    return data;
+
+
+  }
 }
 
 
@@ -199,9 +209,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
       final message = Message(id: const Uuid().v4(), author: User(id: uuid, username: "TestUser"), content: text, timestamp: timestamp);
 
+      var messageData = messageContext.newMessageDataFromContext(message, ref.watch(messagesRepositoryProvider).lastOrNull);
 
-      var (messageData, ctx) = MessageData.fromMessage(message, messageContext);
-      messageContext= ctx;
 
       bool v = await ref.watch(messagesRepositoryProvider.notifier).addMessage(messageData);
 
@@ -289,10 +298,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       scrollDirection: Axis.vertical,
                       itemBuilder: (context, index) {
 
-                        final message = messages[index];
+                        final message = messages[messages.length - index - 1];
 
-
-                        //final nextMessage = message.length messages[messages.length-1 - index - 1];
                         return MessageWidget(message);
                       },
                     ),
