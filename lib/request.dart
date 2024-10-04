@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -11,10 +12,28 @@ import 'package:uuid/uuid.dart';
 
 part 'request.g.dart';
 
+class SendAttachment {
+  UuidString  id;
+  String filename;
+  String content_type;
+  int size;
+
+  Stream<Uint8List>? stream;
+
+  SendAttachment(
+      {required this.id, required this.filename, required this.content_type, required this.size, this.stream});
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return 'id : ${id.toString()}, filename : ${filename}, content_type : ${content_type}, size : ${size}, stream: ${stream.toString()}';
+  }
+}
+
 @riverpod
 Future<User> getUser(GetUserRef ref) async {
   Future<User> createUser(String name) async{
-    Uri uri = Uri.http(SERVER_LOCATION, '/user');
+    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/user');
 
     var header = {
       "Content-Type": "application/json",
@@ -35,7 +54,7 @@ Future<User> getUser(GetUserRef ref) async {
   }
 
   Future<User> getUser() async{
-    Uri uri = Uri.http(SERVER_LOCATION, '/user');
+    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/user');
 
     var header = {
       "Content-Type": "application/json",

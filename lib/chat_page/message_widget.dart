@@ -51,101 +51,98 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
 
     final messageData = widget.messageData;
 
-    return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          showContextMenu(Offset globalPosition) {
-            final position = RelativeRect.fromLTRB(
-                globalPosition.dx, globalPosition.dy, globalPosition.dx, 200);
-            final textMenu = TextContextMenuCallback(
-                onEdit: UnimplementedToast, onReply: UnimplementedToast, onCopy: UnimplementedToast, onDelete: () {
-              ref.watch(messagesRepositoryProvider.notifier).removeMessage(messageData);
-            });
+    showContextMenu(Offset globalPosition) {
+      final position = RelativeRect.fromLTRB(
+          globalPosition.dx, globalPosition.dy, globalPosition.dx, 200);
+      final textMenu = TextContextMenuCallback(
+          onEdit: UnimplementedToast, onReply: UnimplementedToast, onCopy: UnimplementedToast, onDelete: () {
+        ref.watch(messagesRepositoryProvider.notifier).removeMessage(messageData);
+        });
 
-            ContextMenuBuilder(
-                context: context,
-                contextMenuCallback: textMenu,
-                position: position)
-                .showContextMenu();
-          }
+      ContextMenuBuilder(
+          context: context,
+          contextMenuCallback: textMenu,
+          position: position)
+          .showContextMenu();
+    }
 
-          final textUi = MouseRegion(
-            onEnter: (_) {
-              setState(() => isHovered = true);
-            },
-            onExit: (_) => setState(() => isHovered = false),
-            child: GestureDetector(
-              onLongPressStart: (x) => showContextMenu(x.globalPosition),
-              onSecondaryTapUp: (x) => showContextMenu(x.globalPosition),
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 0.0),
-                color: isHovered ? colorScheme.surfaceContainerHighest: colorScheme.surfaceContainerHigh,
-                child: Row(
+    final textUi = MouseRegion(
+      onEnter: (_) {
+        setState(() => isHovered = true);
+      },
+      onExit: (_) => setState(() => isHovered = false),
+      child: GestureDetector(
+        onLongPressStart: (x) => showContextMenu(x.globalPosition),
+        onSecondaryTapUp: (x) => showContextMenu(x.globalPosition),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 0.0),
+          color: isHovered ? colorScheme.surfaceContainerHighest: colorScheme.surfaceContainerHigh,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const SizedBox(width: 8.0),
+              messageData.isDisplayMetadata
+                  ? CircleAvatar(
+                backgroundColor: Colors.blueAccent,
+                child: Text(
+                  messageData.data.author.username[0].toUpperCase(),
+                  style: TextStyle(color: colorScheme.onPrimary),
+                ),
+              )
+                  : const SizedBox(width: 40.0),
+              const SizedBox(width: 8.0),
+              Flexible(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const SizedBox(width: 8.0),
-                    messageData.isDisplayMetadata
-                        ? CircleAvatar(
-                      backgroundColor: Colors.blueAccent,
-                      child: Text(
-                        messageData.message.author.username[0].toUpperCase(),
-                        style: TextStyle(color: colorScheme.onPrimary),
-                      ),
-                    )
-                        : const SizedBox(width: 40.0),
-                    const SizedBox(width: 8.0),
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    if (messageData.isDisplayMetadata)
+                      Row(
                         children: [
-                          if (messageData.isDisplayMetadata)
-                            Row(
-                              children: [
-                                Text(
-                                  messageData.message.author.username,
-                                  style: TextStyle(
-                                    color: colorScheme.onSurface,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _formatTimestamp(messageData.message.timestamp),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: colorScheme.outline,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 2),
                           Text(
-                            messageData.message.content,
-                            style: TextStyle(color: colorScheme.onSurface),
+                            messageData.data.author.username,
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatTimestamp(messageData.data.timestamp),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: colorScheme.outline,
+                            ),
+                          ),
                         ],
                       ),
+                    const SizedBox(height: 2),
+                    Text(
+                      messageData.data.content,
+                      style: TextStyle(color: colorScheme.onSurface),
                     ),
-                    const SizedBox(width: 8.0),
+                    const SizedBox(height: 2),
                   ],
                 ),
               ),
-            ),
-          );
+              const SizedBox(width: 8.0),
+            ],
+          ),
+        ),
+      ),
+    );
 
-          if (messageData.isSpacing) {
-            return Column(
-              children: [
-                textUi,
-                const SizedBox(height: 20.0)
-              ],
-            );
-          } else {
-            return textUi;
-          }
-        });
+    if (messageData.isSpacing) {
+      return Column(
+        children: [
+          textUi,
+          const SizedBox(height: 20.0)
+        ],
+      );
+    } else {
+      return textUi;
+    }
   }
 
   String _formatTimestamp(DateTime timestamp) {

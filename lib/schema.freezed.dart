@@ -23,6 +23,7 @@ mixin _$Message {
   String get id => throw _privateConstructorUsedError;
   User get author => throw _privateConstructorUsedError;
   String get content => throw _privateConstructorUsedError;
+  List<Attachment> get attachments => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
 
   /// Serializes this Message to a JSON map.
@@ -39,7 +40,12 @@ abstract class $MessageCopyWith<$Res> {
   factory $MessageCopyWith(Message value, $Res Function(Message) then) =
       _$MessageCopyWithImpl<$Res, Message>;
   @useResult
-  $Res call({String id, User author, String content, DateTime timestamp});
+  $Res call(
+      {String id,
+      User author,
+      String content,
+      List<Attachment> attachments,
+      DateTime timestamp});
 
   $UserCopyWith<$Res> get author;
 }
@@ -62,6 +68,7 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
     Object? id = null,
     Object? author = null,
     Object? content = null,
+    Object? attachments = null,
     Object? timestamp = null,
   }) {
     return _then(_value.copyWith(
@@ -77,6 +84,10 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
           ? _value.content
           : content // ignore: cast_nullable_to_non_nullable
               as String,
+      attachments: null == attachments
+          ? _value.attachments
+          : attachments // ignore: cast_nullable_to_non_nullable
+              as List<Attachment>,
       timestamp: null == timestamp
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
@@ -102,7 +113,12 @@ abstract class _$$MessageImplCopyWith<$Res> implements $MessageCopyWith<$Res> {
       __$$MessageImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, User author, String content, DateTime timestamp});
+  $Res call(
+      {String id,
+      User author,
+      String content,
+      List<Attachment> attachments,
+      DateTime timestamp});
 
   @override
   $UserCopyWith<$Res> get author;
@@ -124,6 +140,7 @@ class __$$MessageImplCopyWithImpl<$Res>
     Object? id = null,
     Object? author = null,
     Object? content = null,
+    Object? attachments = null,
     Object? timestamp = null,
   }) {
     return _then(_$MessageImpl(
@@ -139,6 +156,10 @@ class __$$MessageImplCopyWithImpl<$Res>
           ? _value.content
           : content // ignore: cast_nullable_to_non_nullable
               as String,
+      attachments: null == attachments
+          ? _value._attachments
+          : attachments // ignore: cast_nullable_to_non_nullable
+              as List<Attachment>,
       timestamp: null == timestamp
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
@@ -154,7 +175,9 @@ class _$MessageImpl implements _Message {
       {required this.id,
       required this.author,
       required this.content,
-      required this.timestamp});
+      required final List<Attachment> attachments,
+      required this.timestamp})
+      : _attachments = attachments;
 
   factory _$MessageImpl.fromJson(Map<String, dynamic> json) =>
       _$$MessageImplFromJson(json);
@@ -165,12 +188,20 @@ class _$MessageImpl implements _Message {
   final User author;
   @override
   final String content;
+  final List<Attachment> _attachments;
+  @override
+  List<Attachment> get attachments {
+    if (_attachments is EqualUnmodifiableListView) return _attachments;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_attachments);
+  }
+
   @override
   final DateTime timestamp;
 
   @override
   String toString() {
-    return 'Message(id: $id, author: $author, content: $content, timestamp: $timestamp)';
+    return 'Message(id: $id, author: $author, content: $content, attachments: $attachments, timestamp: $timestamp)';
   }
 
   @override
@@ -181,13 +212,16 @@ class _$MessageImpl implements _Message {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.author, author) || other.author == author) &&
             (identical(other.content, content) || other.content == content) &&
+            const DeepCollectionEquality()
+                .equals(other._attachments, _attachments) &&
             (identical(other.timestamp, timestamp) ||
                 other.timestamp == timestamp));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, author, content, timestamp);
+  int get hashCode => Object.hash(runtimeType, id, author, content,
+      const DeepCollectionEquality().hash(_attachments), timestamp);
 
   /// Create a copy of Message
   /// with the given fields replaced by the non-null parameter values.
@@ -210,6 +244,7 @@ abstract class _Message implements Message {
       {required final String id,
       required final User author,
       required final String content,
+      required final List<Attachment> attachments,
       required final DateTime timestamp}) = _$MessageImpl;
 
   factory _Message.fromJson(Map<String, dynamic> json) = _$MessageImpl.fromJson;
@@ -221,6 +256,8 @@ abstract class _Message implements Message {
   @override
   String get content;
   @override
+  List<Attachment> get attachments;
+  @override
   DateTime get timestamp;
 
   /// Create a copy of Message
@@ -228,6 +265,234 @@ abstract class _Message implements Message {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$MessageImplCopyWith<_$MessageImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+Attachment _$AttachmentFromJson(Map<String, dynamic> json) {
+  return _Attachment.fromJson(json);
+}
+
+/// @nodoc
+mixin _$Attachment {
+  String get id => throw _privateConstructorUsedError;
+  String get filename => throw _privateConstructorUsedError;
+  int get size => throw _privateConstructorUsedError;
+  String get url => throw _privateConstructorUsedError;
+  String get content_type => throw _privateConstructorUsedError;
+
+  /// Serializes this Attachment to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $AttachmentCopyWith<Attachment> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $AttachmentCopyWith<$Res> {
+  factory $AttachmentCopyWith(
+          Attachment value, $Res Function(Attachment) then) =
+      _$AttachmentCopyWithImpl<$Res, Attachment>;
+  @useResult
+  $Res call(
+      {String id, String filename, int size, String url, String content_type});
+}
+
+/// @nodoc
+class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
+    implements $AttachmentCopyWith<$Res> {
+  _$AttachmentCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? filename = null,
+    Object? size = null,
+    Object? url = null,
+    Object? content_type = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      filename: null == filename
+          ? _value.filename
+          : filename // ignore: cast_nullable_to_non_nullable
+              as String,
+      size: null == size
+          ? _value.size
+          : size // ignore: cast_nullable_to_non_nullable
+              as int,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      content_type: null == content_type
+          ? _value.content_type
+          : content_type // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$AttachmentImplCopyWith<$Res>
+    implements $AttachmentCopyWith<$Res> {
+  factory _$$AttachmentImplCopyWith(
+          _$AttachmentImpl value, $Res Function(_$AttachmentImpl) then) =
+      __$$AttachmentImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String id, String filename, int size, String url, String content_type});
+}
+
+/// @nodoc
+class __$$AttachmentImplCopyWithImpl<$Res>
+    extends _$AttachmentCopyWithImpl<$Res, _$AttachmentImpl>
+    implements _$$AttachmentImplCopyWith<$Res> {
+  __$$AttachmentImplCopyWithImpl(
+      _$AttachmentImpl _value, $Res Function(_$AttachmentImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? filename = null,
+    Object? size = null,
+    Object? url = null,
+    Object? content_type = null,
+  }) {
+    return _then(_$AttachmentImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      filename: null == filename
+          ? _value.filename
+          : filename // ignore: cast_nullable_to_non_nullable
+              as String,
+      size: null == size
+          ? _value.size
+          : size // ignore: cast_nullable_to_non_nullable
+              as int,
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      content_type: null == content_type
+          ? _value.content_type
+          : content_type // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$AttachmentImpl implements _Attachment {
+  const _$AttachmentImpl(
+      {required this.id,
+      required this.filename,
+      required this.size,
+      required this.url,
+      required this.content_type});
+
+  factory _$AttachmentImpl.fromJson(Map<String, dynamic> json) =>
+      _$$AttachmentImplFromJson(json);
+
+  @override
+  final String id;
+  @override
+  final String filename;
+  @override
+  final int size;
+  @override
+  final String url;
+  @override
+  final String content_type;
+
+  @override
+  String toString() {
+    return 'Attachment(id: $id, filename: $filename, size: $size, url: $url, content_type: $content_type)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AttachmentImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.filename, filename) ||
+                other.filename == filename) &&
+            (identical(other.size, size) || other.size == size) &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.content_type, content_type) ||
+                other.content_type == content_type));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, id, filename, size, url, content_type);
+
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AttachmentImplCopyWith<_$AttachmentImpl> get copyWith =>
+      __$$AttachmentImplCopyWithImpl<_$AttachmentImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$AttachmentImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _Attachment implements Attachment {
+  const factory _Attachment(
+      {required final String id,
+      required final String filename,
+      required final int size,
+      required final String url,
+      required final String content_type}) = _$AttachmentImpl;
+
+  factory _Attachment.fromJson(Map<String, dynamic> json) =
+      _$AttachmentImpl.fromJson;
+
+  @override
+  String get id;
+  @override
+  String get filename;
+  @override
+  int get size;
+  @override
+  String get url;
+  @override
+  String get content_type;
+
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AttachmentImplCopyWith<_$AttachmentImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
