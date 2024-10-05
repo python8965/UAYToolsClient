@@ -82,7 +82,7 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               const SizedBox(width: 8.0),
-              messageData.isDisplayMetadata
+              messageData.metaData.isDisplayMetadata
                   ? CircleAvatar(
                 backgroundColor: Colors.blueAccent,
                 child: Text(
@@ -96,7 +96,7 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (messageData.isDisplayMetadata)
+                    if (messageData.metaData.isDisplayMetadata)
                       Row(
                         children: [
                           Text(
@@ -133,7 +133,7 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
       ),
     );
 
-    if (messageData.isSpacing) {
+    if (messageData.metaData.isSpacing) {
       return Column(
         children: [
           textUi,

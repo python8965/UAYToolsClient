@@ -20,6 +20,7 @@ import 'tools.dart';
 
 part 'chat.g.dart';
 
+
 @riverpod
 class MessagesRepository extends _$MessagesRepository {
   @override
@@ -52,10 +53,10 @@ class MessagesRepository extends _$MessagesRepository {
       for (var data in json["messages"]) {
         var message = Message.fromJson(data);
 
-        var messageData = messageContext.newMessageDataFromContext(
+        var metadata = messageContext.metadataFromContext(
             message, messageDatas.lastOrNull);
 
-        messageDatas.add(messageData);
+        messageDatas.add(MessageData(data: message, metaData: metadata));
       }
 
       state = messageDatas;
@@ -68,7 +69,7 @@ class MessagesRepository extends _$MessagesRepository {
     }
   }
 
-  Future<bool> addMessage(EditingMessage message) async {
+  Future<bool> addMessage(EditingMessage message, MessageMetaData metadata) async {
     Future<bool> addAttachment(SendAttachment attachment) async {
       var header = {
         "Content-Type": "multipart/form-data",
@@ -76,15 +77,29 @@ class MessagesRepository extends _$MessagesRepository {
 
       Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/attachment');
 
-      var request = new http.MultipartRequest('POST', uri);
-      final httpImage = http.MultipartFile.fromBytes('files.myimage', await attachment.stream?.first ?? [],
-          contentType: MediaType.parse(attachment.content_type), filename: 'myImage.png');
-      request.files.add(httpImage);
+      var request = http.MultipartRequest('POST', uri);
+
+      var body = {
+          "id" : attachment.id,
+          "filename" :attachment.filename,
+          "content_type": attachment.content_type,
+          "size" : attachment.size
+      };
+
+      var bodyJson = jsonEncode(body);
+
+      final bodyFile = http.MultipartFile.fromBytes('body', bodyJson.codeUnits,
+          contentType: MediaType("application", "json"), filename: 'body.json');
+
+      final attachmentFile = http.MultipartFile.fromBytes('mainFile', await attachment.stream?.first ?? [],
+          contentType: MediaType.parse(attachment.content_type), filename: attachment.filename);
+
+      request.files.add(bodyFile);
+      request.files.add(attachmentFile);
 
       final response = await request.send();
 
       if (response.statusCode == 200) {
-        state = [...state.take(99), message.message];
         return true;
       } else {
         return false;
@@ -93,6 +108,12 @@ class MessagesRepository extends _$MessagesRepository {
 
     for (var attachment in message.attachment) {
       logger.i(attachment.toString());
+
+      final response = await addAttachment(attachment);
+
+      if (!response){
+        return false;
+      }
     }
 
     Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/messages');
@@ -106,7 +127,7 @@ class MessagesRepository extends _$MessagesRepository {
     var response = await http.post(uri, headers: header, body: body);
 
     if (response.statusCode == 200) {
-      state = [...state.take(99), message.message];
+      state = [...state.take(99), MessageData(data: message.message, metaData: metadata)];
       return true;
     } else {
       return false;
@@ -128,18 +149,18 @@ class MessagesRepository extends _$MessagesRepository {
     if (response.statusCode == 200) {
       final index = state.indexWhere((x) => x.data.id == message.data.id);
 
-      if (state[index].isSpacing) {
+      if (state[index].metaData.isSpacing) {
         state
             .elementAtOrNull(index - 1)
-            ?.isSpacing = true;
+            ?.metaData.isSpacing = true;
       }
 
-      if (state[index].isDisplayMetadata) {
+      if (state[index].metaData.isDisplayMetadata) {
         logger.i(
             "isDisplayMetaData ${index} ${state.elementAtOrNull(index + 1)}");
         state
             .elementAtOrNull(index + 1)
-            ?.isDisplayMetadata = true;
+            ?.metaData.isDisplayMetadata = true;
       }
 
       state.removeAt(index);
@@ -159,18 +180,25 @@ class EditingMessage {
   EditingMessage(this.message, this.attachment);
 }
 
-class MessageData {
+class MessageMetaData {
   bool isDisplayMetadata;
   bool isSpacing;
+
+  MessageMetaData({
+    required this.isDisplayMetadata,
+    required this.isSpacing});
+}
+
+class MessageData {
+  MessageMetaData metaData;
   Message data;
 
   MessageData({required this.data,
-    required this.isDisplayMetadata,
-    required this.isSpacing});
+    required this.metaData});
 
   @override
   String toString() {
-    return [data.toString(), isDisplayMetadata, isSpacing].toString();
+    return [data.toString(), this.metaData].toString();
   }
 }
 
@@ -180,12 +208,11 @@ class MessageContext {
 
   MessageContext(this.previousTime, this.previousId);
 
-  MessageData newMessageDataFromContext(Message message,
+  MessageMetaData metadataFromContext(Message message,
       MessageData? previousMessageData) {
     final timestamp = message.timestamp;
 
-    MessageData data = MessageData(
-        data: message, isDisplayMetadata: true, isSpacing: false);
+    var data = MessageMetaData(isDisplayMetadata: true, isSpacing: false);
 
     final diffTime = timestamp.difference(previousTime).abs();
 
@@ -210,7 +237,7 @@ class MessageContext {
     }
 
     if (data.isDisplayMetadata) {
-      previousMessageData?.isSpacing = true;
+      previousMessageData?.metaData.isSpacing = true;
     }
 
     logger.i([
@@ -232,6 +259,8 @@ class ChatPage extends ConsumerStatefulWidget {
   ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
+
+
 class _ChatPageState extends ConsumerState<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   final String currentUsername = "TestUser"; // 현재 사용자 이름
@@ -249,17 +278,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ],
           timestamp: DateTime.timestamp()
       ), [
-    SendAttachment(
-        id: "",
-        filename: " filename",
-        size: 0,
-        content_type: "content_type"
-    ),
-    SendAttachment(
-        id: "",
-        filename: " filename",
-        size: 0,
-        content_type: "content_type")
     ]
   );
 
@@ -282,16 +300,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           timestamp: timestamp,
           attachments: []);
 
-
-
-      bool v = await ref
-          .watch(messagesRepositoryProvider.notifier)
-          .addMessage(currentEditingMessage);
-
-      var messageData = messageContext.newMessageDataFromContext(
+      var messageMetaData = messageContext.metadataFromContext(
           message, ref
           .watch(messagesRepositoryProvider)
           .lastOrNull);
+
+      bool v = await ref
+          .watch(messagesRepositoryProvider.notifier)
+          .addMessage(currentEditingMessage, messageMetaData);
+
+
 
       if (!v) {
         final snackBar = SnackBar(
@@ -438,9 +456,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
         logger.d("performDrop ${reader.getFormats(Formats.standardFormats)}");
 
-
         for (var format in Formats.standardFormats) {
+          if (format == Formats.plainText || format == Formats.htmlText || format == Formats.uri || format == Formats.fileUri) {
+            continue;
+          }
+
           if (reader.canProvide(format)) {
+            logger.i("dropped Item can provide ${format.toString()}");
+
             reader.getFile(format as FileFormat?, (file) async {
               // Binary files may be too large to be loaded in memory and thus
               // are exposed as stream.
@@ -448,9 +471,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
               final id = Uuid().v4();
 
+
               currentEditingMessage.attachment.add(
                   SendAttachment(id: id , filename: file.fileName ?? await reader.getSuggestedName() ?? "temp_${id.toString()}", content_type: reader.getFormats(Formats.standardFormats).first.toString(), size: file.fileSize ?? 0,stream: stream)
               );
+
+              setState(() {
+                currentEditingMessage.attachment = currentEditingMessage.attachment;
+              });
+
 
               // Alternatively, if you know that that the value is small enough,
               // you can read the entire value into memory:
@@ -553,12 +582,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                             ),
                             textCapitalization: TextCapitalization.sentences,
                             onSubmitted: (str) {
-                              currentEditingMessage =
-                                  currentEditingMessage?.copyWith(content: str);
+                              currentEditingMessage.message =
+                                  currentEditingMessage.message.copyWith(content: str);
 
-                              if (currentEditingMessage != null) {
-                                _sendMessage();
-                              }
+                              _sendMessage();
                             },
                           ),
                         ),

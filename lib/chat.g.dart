@@ -7,7 +7,7 @@ part of 'chat.dart';
 // **************************************************************************
 
 String _$messagesRepositoryHash() =>
-    r'd871df25d7ead28a47b13c313372d3a0aa26df8a';
+    r'327acfb9a14cdb3d050b51a0456132b423409e54';
 
 /// See also [MessagesRepository].
 @ProviderFor(MessagesRepository)
