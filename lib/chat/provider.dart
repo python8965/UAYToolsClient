@@ -62,7 +62,7 @@ class MessagesRepository extends _$MessagesRepository {
   }
 
   Future<bool> addMessage(EditingMessage message, MessageMetaData metadata) async {
-    Future<bool> addAttachment(SendAttachment attachment) async {
+    Future<Attachment?> addAttachment(SendAttachment attachment) async {
       var header = {
         "Content-Type": "multipart/form-data; charset=utf-8",
       };
@@ -89,22 +89,29 @@ class MessagesRepository extends _$MessagesRepository {
       request.files.add(bodyFile);
       request.files.add(attachmentFile);
 
-      final response = await request.send();
+      final stream = await request.send();
+      var response = await http.Response.fromStream(stream);
+
+      final res = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return true;
+        return res;
       } else {
-        return false;
+        return null;
       }
     }
+
+    List<Attachment> send_attachments = [];
 
     for (var attachment in message.attachment) {
       logger.i(attachment.toString());
 
       final response = await addAttachment(attachment);
 
-      if (!response){
+      if (response == null){
         return false;
+      }else {
+        send_attachments.add(response);
       }
     }
 
@@ -113,6 +120,8 @@ class MessagesRepository extends _$MessagesRepository {
     var header = {
       "Content-Type": "application/json",
     };
+
+    message.message = message.message.copyWith(attachments: send_attachments);
 
     var body = jsonEncode(message.message);
 
