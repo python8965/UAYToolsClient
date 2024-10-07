@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'chat.dart';
+part of 'provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
 String _$messagesRepositoryHash() =>
-    r'327acfb9a14cdb3d050b51a0456132b423409e54';
+    r'f66edf35cb11dee24bdbabfe0792a28213fc3457';
 
 /// See also [MessagesRepository].
 @ProviderFor(MessagesRepository)

@@ -6,172 +6,23 @@ import 'package:http/http.dart' as http;
 import 'package:json_annotation/json_annotation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'package:super_clipboard/super_clipboard.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
-import 'package:uay_tools/chat_page/message_widget.dart';
+import 'package:uay_tools/chat/message_widget.dart';
 import 'package:uay_tools/request.dart';
 import 'package:uay_tools/schema.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http_parser/http_parser.dart';
 
+import 'chat/provider.dart';
 import 'main.dart';
 import 'tools.dart';
 
-part 'chat.g.dart';
 
 
-@riverpod
-class MessagesRepository extends _$MessagesRepository {
-  @override
-  List<MessageData> build() => [];
 
-  Future<bool> loadMessages() async {
-    var queryParams = {
-      "amount": '100',
-    };
-
-    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/messages', queryParams);
-
-    logger.d(uri.toString());
-
-    var header = {
-      "Content-Type": "application/json; charset=UTF-8",
-      "charset": "UTF-8",
-    };
-
-    var response = await http.get(uri, headers: header);
-
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-
-      List<MessageData> messageDatas = [];
-
-      MessageContext messageContext =
-      MessageContext(DateTime.timestamp(), const Uuid().v4());
-
-      for (var data in json["messages"]) {
-        var message = Message.fromJson(data);
-
-        var metadata = messageContext.metadataFromContext(
-            message, messageDatas.lastOrNull);
-
-        messageDatas.add(MessageData(data: message, metaData: metadata));
-      }
-
-      state = messageDatas;
-
-      return true;
-    } else {
-      logger.w("cannot receive messages");
-
-      return false;
-    }
-  }
-
-  Future<bool> addMessage(EditingMessage message, MessageMetaData metadata) async {
-    Future<bool> addAttachment(SendAttachment attachment) async {
-      var header = {
-        "Content-Type": "multipart/form-data",
-      };
-
-      Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/attachment');
-
-      var request = http.MultipartRequest('POST', uri);
-
-      var body = {
-          "id" : attachment.id,
-          "filename" :attachment.filename,
-          "content_type": attachment.content_type,
-          "size" : attachment.size
-      };
-
-      var bodyJson = jsonEncode(body);
-
-      final bodyFile = http.MultipartFile.fromBytes('body', bodyJson.codeUnits,
-          contentType: MediaType("application", "json"), filename: 'body.json');
-
-      final attachmentFile = http.MultipartFile.fromBytes('mainFile', await attachment.stream?.first ?? [],
-          contentType: MediaType.parse(attachment.content_type), filename: attachment.filename);
-
-      request.files.add(bodyFile);
-      request.files.add(attachmentFile);
-
-      final response = await request.send();
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    for (var attachment in message.attachment) {
-      logger.i(attachment.toString());
-
-      final response = await addAttachment(attachment);
-
-      if (!response){
-        return false;
-      }
-    }
-
-    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/messages');
-
-    var header = {
-      "Content-Type": "application/json",
-    };
-
-    var body = jsonEncode(message.message);
-
-    var response = await http.post(uri, headers: header, body: body);
-
-    if (response.statusCode == 200) {
-      state = [...state.take(99), MessageData(data: message.message, metaData: metadata)];
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  Future<bool> removeMessage(MessageData message) async {
-    Uri uri = Uri.http(
-      DEBUG_SERVER_LOCATION,
-      '/messages/${message.data.id}',
-    );
-
-    var header = {
-      "Content-Type": "application/json",
-    };
-
-    var response = await http.delete(uri, headers: header);
-
-    if (response.statusCode == 200) {
-      final index = state.indexWhere((x) => x.data.id == message.data.id);
-
-      if (state[index].metaData.isSpacing) {
-        state
-            .elementAtOrNull(index - 1)
-            ?.metaData.isSpacing = true;
-      }
-
-      if (state[index].metaData.isDisplayMetadata) {
-        logger.i(
-            "isDisplayMetaData ${index} ${state.elementAtOrNull(index + 1)}");
-        state
-            .elementAtOrNull(index + 1)
-            ?.metaData.isDisplayMetadata = true;
-      }
-
-      state.removeAt(index);
-      state = [...state];
-
-      return true;
-    } else {
-      return false;
-    }
-  }
-}
 
 class EditingMessage {
   Message message;
@@ -268,21 +119,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   String? myUuid;
 
-  EditingMessage currentEditingMessage = EditingMessage(
-      Message(
-          id: "",
-          author: User(id: "", username: ""),
-          content: "",
-          attachments: [
+  List<SendAttachment> attachments = [];
+  String text = "";
 
-          ],
-          timestamp: DateTime.timestamp()
-      ), [
-    ]
-  );
-
-  MessageContext messageContext =
-  MessageContext(DateTime.timestamp(), const Uuid().v4());
+  MessageContext messageContext = MessageContext(DateTime.timestamp(), const Uuid().v4());
   bool isLoaded = false;
 
   void _sendMessage() async {
@@ -305,13 +145,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           .watch(messagesRepositoryProvider)
           .lastOrNull);
 
-      bool v = await ref
+      final current = EditingMessage(message, attachments);
+
+      bool isSuccess = await ref
           .watch(messagesRepositoryProvider.notifier)
-          .addMessage(currentEditingMessage, messageMetaData);
+          .addMessage(current , messageMetaData);
 
+      attachments.clear();
 
-
-      if (!v) {
+      if (!isSuccess) {
         final snackBar = SnackBar(
           content: Text(uuid),
           action: SnackBarAction(
@@ -398,7 +240,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     children: [
                       Text(attachment.filename),
                       Text(
-                        attachment.content_type,
+                        attachment.contentType.toString(),
                         textAlign: TextAlign.end,
                       )
                     ],
@@ -471,13 +313,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
               final id = Uuid().v4();
 
+              final contentTypeString = MediaType.parse((reader.getFormats(Formats.standardFormats).first as SimpleFileFormat?)?.mimeTypes?.firstOrNull ?? "application/octet-stream");
 
-              currentEditingMessage.attachment.add(
-                  SendAttachment(id: id , filename: file.fileName ?? await reader.getSuggestedName() ?? "temp_${id.toString()}", content_type: reader.getFormats(Formats.standardFormats).first.toString(), size: file.fileSize ?? 0,stream: stream)
-              );
+
+
+              final attachment = SendAttachment(id: id , filename: file.fileName ?? await reader.getSuggestedName() ?? "temp_${id.toString()}", contentType:contentTypeString  , size: file.fileSize ?? 0,stream: stream);
+
+              logger.d(attachment);
+
+              attachments.add(attachment);
 
               setState(() {
-                currentEditingMessage.attachment = currentEditingMessage.attachment;
+                attachments = attachments;
               });
 
 
@@ -544,11 +391,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     height: 150.0,
                     child: ListView.builder(
                       padding: const EdgeInsets.all(2.0),
-                      itemCount: currentEditingMessage?.attachment.length ?? 0,
+                      itemCount: attachments.length ?? 0,
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (context, index) {
-                        final attachment =
-                        currentEditingMessage!.attachment[index];
+                        final attachment = attachments[index];
 
                         return buildAttachment(attachment);
                       },
@@ -581,10 +427,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                               border: InputBorder.none,
                             ),
                             textCapitalization: TextCapitalization.sentences,
-                            onSubmitted: (str) {
-                              currentEditingMessage.message =
-                                  currentEditingMessage.message.copyWith(content: str);
-
+                            onSubmitted: (_) {
                               _sendMessage();
                             },
                           ),
