@@ -1,15 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:uay_tools/chat.dart';
 import 'package:uay_tools/schema.dart';
 import 'package:uay_tools/tools.dart';
-import 'package:uuid/uuid.dart';
 
 part 'request.g.dart';
 
@@ -27,7 +24,7 @@ class SendAttachment {
   @override
   String toString() {
     // TODO: implement toString
-    return 'id : ${id.toString()}, filename : ${filename}, content_type : ${contentType}, size : ${size}, stream: ${stream.toString()}';
+    return 'id : ${id.toString()}, filename : $filename, content_type : $contentType, size : $size, stream: ${stream.toString()}';
   }
 }
 

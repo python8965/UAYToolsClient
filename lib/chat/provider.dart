@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:http_parser/http_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
@@ -150,7 +149,7 @@ class MessagesRepository extends _$MessagesRepository {
 
       if (state[index].metaData.isDisplayMetadata) {
         logger.i(
-            "isDisplayMetaData ${index} ${state.elementAtOrNull(index + 1)}");
+            "isDisplayMetaData $index ${state.elementAtOrNull(index + 1)}");
         state
             .elementAtOrNull(index + 1)
             ?.metaData.isDisplayMetadata = true;

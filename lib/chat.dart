@@ -1,9 +1,5 @@
 // chat.dart
-import 'dart:convert';
-import 'dart:io';
 
-import 'package:http/http.dart' as http;
-import 'package:json_annotation/json_annotation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,11 +9,9 @@ import 'package:uay_tools/chat/message_widget.dart';
 import 'package:uay_tools/request.dart';
 import 'package:uay_tools/schema.dart';
 import 'package:uuid/uuid.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http_parser/http_parser.dart';
 
 import 'chat/provider.dart';
-import 'main.dart';
 import 'tools.dart';
 
 
@@ -49,7 +43,7 @@ class MessageData {
 
   @override
   String toString() {
-    return [data.toString(), this.metaData].toString();
+    return [data.toString(), metaData].toString();
   }
 }
 
@@ -205,7 +199,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
 
     Widget buildAttachment(SendAttachment attachment) {
-      final _width = MediaQuery
+      final width = MediaQuery
           .of(context)
           .size
           .width;
@@ -387,7 +381,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               color: colorScheme.surfaceContainerHigh,
               child: Column(
                 children: [
-                  Container(
+                  SizedBox(
                     height: 150.0,
                     child: ListView.builder(
                       padding: const EdgeInsets.all(2.0),
