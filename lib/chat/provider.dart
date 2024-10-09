@@ -92,7 +92,8 @@ class MessagesRepository extends _$MessagesRepository {
       final stream = await request.send();
       var response = await http.Response.fromStream(stream);
 
-      final res = jsonDecode(response.body);
+
+      final res = Attachment.fromJson(jsonDecode(response.body));
 
       if (response.statusCode == 200) {
         return res;
@@ -101,7 +102,7 @@ class MessagesRepository extends _$MessagesRepository {
       }
     }
 
-    List<Attachment> send_attachments = [];
+    List<UuidString> send_attachments = [];
 
     for (var attachment in message.attachment) {
       logger.i(attachment.toString());
@@ -111,7 +112,7 @@ class MessagesRepository extends _$MessagesRepository {
       if (response == null){
         return false;
       }else {
-        send_attachments.add(response);
+        send_attachments.add(response.id);
       }
     }
 

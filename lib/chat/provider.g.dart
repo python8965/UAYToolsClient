@@ -7,7 +7,7 @@ part of 'provider.dart';
 // **************************************************************************
 
 String _$messagesRepositoryHash() =>
-    r'edf94db0327388e23af84d6f7e7632a61b68f334';
+    r'cf72efc2fcf00690f2df85a1e97ba1dd71aee498';
 
 /// See also [MessagesRepository].
 @ProviderFor(MessagesRepository)

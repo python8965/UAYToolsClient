@@ -14,10 +14,6 @@ import 'package:http_parser/http_parser.dart';
 import 'chat/provider.dart';
 import 'tools.dart';
 
-
-
-
-
 class EditingMessage {
   Message message;
   List<SendAttachment> attachment;
@@ -29,17 +25,14 @@ class MessageMetaData {
   bool isDisplayMetadata;
   bool isSpacing;
 
-  MessageMetaData({
-    required this.isDisplayMetadata,
-    required this.isSpacing});
+  MessageMetaData({required this.isDisplayMetadata, required this.isSpacing});
 }
 
 class MessageData {
   MessageMetaData metaData;
   Message data;
 
-  MessageData({required this.data,
-    required this.metaData});
+  MessageData({required this.data, required this.metaData});
 
   @override
   String toString() {
@@ -53,8 +46,8 @@ class MessageContext {
 
   MessageContext(this.previousTime, this.previousId);
 
-  MessageMetaData metadataFromContext(Message message,
-      MessageData? previousMessageData) {
+  MessageMetaData metadataFromContext(
+      Message message, MessageData? previousMessageData) {
     final timestamp = message.timestamp;
 
     var data = MessageMetaData(isDisplayMetadata: true, isSpacing: false);
@@ -104,8 +97,6 @@ class ChatPage extends ConsumerStatefulWidget {
   ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
-
-
 class _ChatPageState extends ConsumerState<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   final String currentUsername = "TestUser"; // 현재 사용자 이름
@@ -114,15 +105,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   String? myUuid;
 
   List<SendAttachment> attachments = [];
-  String text = "";
 
-  MessageContext messageContext = MessageContext(DateTime.timestamp(), const Uuid().v4());
+  MessageContext messageContext =
+      MessageContext(DateTime.timestamp(), const Uuid().v4());
   bool isLoaded = false;
 
   void _sendMessage() async {
     final text = _controller.text.trim();
 
-    if (text.isNotEmpty && myUuid != null) {
+    if (myUuid != null && (text.isNotEmpty || attachments.isNotEmpty)) {
       final timestamp = DateTime.timestamp();
 
       final uuid = myUuid!;
@@ -135,15 +126,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           attachments: []);
 
       var messageMetaData = messageContext.metadataFromContext(
-          message, ref
-          .watch(messagesRepositoryProvider)
-          .lastOrNull);
+          message, ref.watch(messagesRepositoryProvider).lastOrNull);
 
       final current = EditingMessage(message, attachments);
 
       bool isSuccess = await ref
           .watch(messagesRepositoryProvider.notifier)
-          .addMessage(current , messageMetaData);
+          .addMessage(current, messageMetaData);
 
       attachments.clear();
 
@@ -186,9 +175,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       isLoaded = true;
     }
 
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final AsyncValue<User> userId = ref.watch(getUserProvider);
 
@@ -199,10 +186,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
 
     Widget buildAttachment(SendAttachment attachment) {
-      final width = MediaQuery
-          .of(context)
-          .size
-          .width;
+      final width = MediaQuery.of(context).size.width;
 
       return Card(
           margin: EdgeInsets.all(4.0),
@@ -213,7 +197,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 top: -10.0,
                 right: -10.0,
                 child: FloatingActionButton.small(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      if (!attachments.remove(attachment)) {
+                        logger.e("attachment remove not successful.");
+                      }
+                    });
+                  },
                   child: Icon(Icons.close),
                 ),
               ),
@@ -280,57 +270,150 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         // This is a good place to remove any visual indicators.
       },
       onPerformDrop: (event) async {
-        // Called when user dropped the item. You can now request the data.
-        // Note that data must be requested before the performDrop callback
-        // is over.
-        final item = event.session.items.first;
-
-        // data reader is available now
-        final reader = item.dataReader!;
-
-        final formats = reader.getFormats(Formats.standardFormats);
-
-        logger.d("performDrop ${reader.getFormats(Formats.standardFormats)}");
-
-        for (var format in Formats.standardFormats) {
-          if (format == Formats.plainText || format == Formats.htmlText || format == Formats.uri || format == Formats.fileUri) {
-            continue;
+        T? tryCast<T>(dynamic x) {
+          try {
+            return (x as T);
+          } catch (_) {
+            return null;
           }
+        }
 
-          if (reader.canProvide(format)) {
-            logger.i("dropped Item can provide ${format.toString()}");
+        for (var item in event.session.items) {
+          final id = Uuid().v4();
 
-            reader.getFile(format as FileFormat?, (file) async {
-              // Binary files may be too large to be loaded in memory and thus
-              // are exposed as stream.
-              final stream = file.getStream();
+          // data reader is available now
+          final reader = item.dataReader!;
 
-              final id = Uuid().v4();
+          final formats = reader.getFormats(Formats.standardFormats);
 
-              final contentTypeString = MediaType.parse((reader.getFormats(Formats.standardFormats).first as SimpleFileFormat?)?.mimeTypes?.firstOrNull ?? "application/octet-stream");
+          logger.d("performDrop ${reader.getFormats(Formats.standardFormats)}");
+
+          bool isFileReceived = false;
+          bool isValueReceived = false;
+
+          for (var format in formats) {
 
 
+            if (format == Formats.htmlFile || format == Formats.htmlText) {
+              continue;
+            }
 
-              final attachment = SendAttachment(id: id , filename: file.fileName ?? await reader.getSuggestedName() ?? "temp_${id.toString()}", contentType:contentTypeString  , size: file.fileSize ?? 0,stream: stream);
+            SimpleValueFormat? valueFormat = tryCast<SimpleValueFormat>(format);
+            SimpleFileFormat? fileFormat = tryCast<SimpleFileFormat>(format);
 
-              logger.d(attachment);
+            logger.d("ohh ${valueFormat} ${fileFormat}");
 
-              attachments.add(attachment);
-
-              setState(() {
-                attachments = attachments;
+            if (valueFormat != null) {
+              reader.getValue(Formats.fileUri, (file) async {
+                logger.d(file?.path);
               });
 
+              if (format == Formats.plainText) {
+                isValueReceived = true;
 
-              // Alternatively, if you know that that the value is small enough,
-              // you can read the entire value into memory:
-              // (note that readAll is mutually exclusive with getStream(), you
-              // can only use one of them)
-              // final data = file.readAll();
-            }, onError: (error) {
-              logger.d('Error reading value $error');
-            });
+                reader.getValue(Formats.plainText, (file) async {
+                  logger.d("plain text ${file!.runes.string}");
+
+
+
+                  setState(() {
+                    _controller.text = file.runes.string;
+                  });
+                });
+              }
+
+
+              continue;
+            }
+
+            if (fileFormat != null) {
+              logger.i(
+                  "dropped Item can provide ${fileFormat.providerFormat}/${fileFormat} and type is ${format}");
+
+              isFileReceived= true;
+
+              reader.getFile(fileFormat, (file) async {
+                // Binary files may be too large to be loaded in memory and thus
+                // are exposed as stream.
+                final stream = file.getStream();
+
+
+
+                logger.i(reader.getFormats(Formats.standardFormats));
+
+                logger.i(fileFormat.mimeTypes);
+
+                final contentTypeString = MediaType.parse(
+                    fileFormat.mimeTypes?.firstOrNull ??
+                        "application/octet-stream");
+
+                final attachment = SendAttachment(
+                    id: id,
+                    filename: file.fileName ??
+                        await reader.getSuggestedName() ??
+                        "temp_${id.toString()}",
+                    contentType: contentTypeString,
+                    size: file.fileSize ?? 0,
+                    stream: stream);
+
+                logger.d(attachment);
+
+                attachments.add(attachment);
+
+                setState(() {
+                  attachments = attachments;
+                });
+
+
+
+                // Alternatively, if you know that that the value is small enough,
+                // you can read the entire value into memory:
+                // (note that readAll is mutually exclusive with getStream(), you
+                // can only use one of them)
+                // final data = file.readAll();
+              }, onError: (error) {
+                logger.d('Error reading value $error');
+              });
+            }
           }
+
+          if (!(isValueReceived || isFileReceived)) {
+            final vfile = await reader.getVirtualFileReceiver();
+
+            if (vfile != null) {
+              logger.t(vfile.format);
+
+              final (f, p) = vfile.receiveVirtualFile();
+              final s = f.asStream();
+
+              await for (var virtualFile in s){
+                final contentTypeString = MediaType.parse("application/octet-stream");
+
+                final stream  = Stream.value(await virtualFile.readNext());
+
+                final attachment = SendAttachment(
+                    id: id,
+                    filename: await reader.getSuggestedName() ??
+                        "temp_${id.toString()}",
+                    contentType: contentTypeString,
+                    size: virtualFile.length ?? 0,
+                    stream: stream);
+
+                logger.d(attachment);
+
+                attachments.add(attachment);
+
+                setState(() {
+                  attachments = attachments;
+                });
+              }
+
+
+            }
+          }
+
+
+
         }
       },
 
@@ -339,7 +422,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           title: const Text('단일 서버 채팅'),
           actions: [
             switch (userId) {
-            // TODO: Handle this case.
+              // TODO: Handle this case.
               AsyncData(:final value) => const Text("Success"),
               AsyncError() => const Text("Error"),
               _ => const CircularProgressIndicator()
@@ -353,47 +436,48 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             Expanded(
               child: Container(
                 decoration:
-                BoxDecoration(color: colorScheme.surfaceContainerHigh),
+                    BoxDecoration(color: colorScheme.surfaceContainerHigh),
                 child: messages.isEmpty
                     ? Center(
-                  child: Text(
-                    '메시지가 없습니다.',
-                    style: TextStyle(color: colorScheme.onSurface),
-                  ),
-                )
+                        child: Text(
+                          '메시지가 없습니다.',
+                          style: TextStyle(color: colorScheme.onSurface),
+                        ),
+                      )
                     : ListView.builder(
-                  reverse: true,
-                  padding: const EdgeInsets.all(0.0),
-                  itemCount: messages.length,
-                  scrollDirection: Axis.vertical,
-                  itemBuilder: (context, index) {
-                    final message = messages[messages.length - index - 1];
+                        reverse: true,
+                        padding: const EdgeInsets.all(0.0),
+                        itemCount: messages.length,
+                        scrollDirection: Axis.vertical,
+                        itemBuilder: (context, index) {
+                          final message = messages[messages.length - index - 1];
 
-                    return MessageWidget(message);
-                  },
-                ),
+                          return MessageWidget(message);
+                        },
+                      ),
               ),
             ),
             // 메시지 입력 필드
             Container(
               padding:
-              const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
               color: colorScheme.surfaceContainerHigh,
               child: Column(
                 children: [
-                  SizedBox(
-                    height: 150.0,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(2.0),
-                      itemCount: attachments.length ?? 0,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) {
-                        final attachment = attachments[index];
+                  if (attachments.isNotEmpty)
+                    SizedBox(
+                      height: 150.0,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(2.0),
+                        itemCount: attachments.length ?? 0,
+                        scrollDirection: Axis.horizontal,
+                        itemBuilder: (context, index) {
+                          final attachment = attachments[index];
 
-                        return buildAttachment(attachment);
-                      },
+                          return buildAttachment(attachment);
+                        },
+                      ),
                     ),
-                  ),
                   Row(
                     children: [
                       IconButton(

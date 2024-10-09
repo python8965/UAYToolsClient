@@ -14,7 +14,7 @@ class Message with _$Message {
     required UuidString  id,
     required User author,
     required String content,
-    required List<Attachment> attachments,
+    required List<UuidString> attachments,
 
     required DateTime timestamp,
   }) = _Message;
