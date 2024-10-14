@@ -14,6 +14,15 @@ import '../tools.dart';
 part 'provider.g.dart';
 
 @riverpod
+Future<Attachment> attachment(AttachmentRef ref) async {
+  final response = await http.get(Uri.http(DEBUG_SERVER_LOCATION, '/attachment'));
+
+  final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+  return Attachment.fromJson(json);
+}
+
+@riverpod
 class MessagesRepository extends _$MessagesRepository {
   @override
   List<MessageData> build() => [];
@@ -29,7 +38,6 @@ class MessagesRepository extends _$MessagesRepository {
 
     var header = {
       "Content-Type": "application/json; charset=UTF-8",
-      "charset": "UTF-8",
     };
 
     var response = await http.get(uri, headers: header);

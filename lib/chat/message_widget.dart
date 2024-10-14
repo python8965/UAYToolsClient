@@ -118,11 +118,14 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
                         ],
                       ),
                     const SizedBox(height: 2),
-                    Text(
+                    Text( // 메인 메세지
                       messageData.data.content,
                       style: TextStyle(color: colorScheme.onSurface),
                     ),
                     const SizedBox(height: 2),
+                    OverflowBar(
+                      children: messageData.data.attachments.map((x) => x.).toList(),
+                    )
                   ],
                 ),
               ),

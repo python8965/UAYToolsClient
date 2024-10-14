@@ -29,6 +29,7 @@ Map<String, dynamic> _$$MessageImplToJson(_$MessageImpl instance) =>
 _$AttachmentImpl _$$AttachmentImplFromJson(Map<String, dynamic> json) =>
     _$AttachmentImpl(
       id: json['id'] as String,
+      message_id: json['message_id'] as String,
       filename: json['filename'] as String,
       size: (json['size'] as num).toInt(),
       url: json['url'] as String,
@@ -38,6 +39,7 @@ _$AttachmentImpl _$$AttachmentImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$AttachmentImplToJson(_$AttachmentImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'message_id': instance.message_id,
       'filename': instance.filename,
       'size': instance.size,
       'url': instance.url,

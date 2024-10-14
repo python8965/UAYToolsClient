@@ -6,8 +6,22 @@ part of 'provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$attachmentHash() => r'9385c94432c00dedab7642daa4918f70e5ed23b3';
+
+/// See also [attachment].
+@ProviderFor(attachment)
+final attachmentProvider = AutoDisposeFutureProvider<Attachment>.internal(
+  attachment,
+  name: r'attachmentProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$attachmentHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef AttachmentRef = AutoDisposeFutureProviderRef<Attachment>;
 String _$messagesRepositoryHash() =>
-    r'cf72efc2fcf00690f2df85a1e97ba1dd71aee498';
+    r'c12ad7ef15736e72e846debc3de69e9426e373c6';
 
 /// See also [MessagesRepository].
 @ProviderFor(MessagesRepository)

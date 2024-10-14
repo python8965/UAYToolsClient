@@ -27,6 +27,7 @@ class Message with _$Message {
 class Attachment with _$Attachment {
   const factory Attachment({
     required UuidString  id,
+    required UuidString message_id,
     required String filename,
     required int size,
 

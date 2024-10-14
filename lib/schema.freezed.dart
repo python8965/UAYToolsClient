@@ -275,6 +275,7 @@ Attachment _$AttachmentFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Attachment {
   String get id => throw _privateConstructorUsedError;
+  String get message_id => throw _privateConstructorUsedError;
   String get filename => throw _privateConstructorUsedError;
   int get size => throw _privateConstructorUsedError;
   String get url => throw _privateConstructorUsedError;
@@ -297,7 +298,12 @@ abstract class $AttachmentCopyWith<$Res> {
       _$AttachmentCopyWithImpl<$Res, Attachment>;
   @useResult
   $Res call(
-      {String id, String filename, int size, String url, String content_type});
+      {String id,
+      String message_id,
+      String filename,
+      int size,
+      String url,
+      String content_type});
 }
 
 /// @nodoc
@@ -316,6 +322,7 @@ class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
   @override
   $Res call({
     Object? id = null,
+    Object? message_id = null,
     Object? filename = null,
     Object? size = null,
     Object? url = null,
@@ -325,6 +332,10 @@ class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      message_id: null == message_id
+          ? _value.message_id
+          : message_id // ignore: cast_nullable_to_non_nullable
               as String,
       filename: null == filename
           ? _value.filename
@@ -355,7 +366,12 @@ abstract class _$$AttachmentImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String id, String filename, int size, String url, String content_type});
+      {String id,
+      String message_id,
+      String filename,
+      int size,
+      String url,
+      String content_type});
 }
 
 /// @nodoc
@@ -372,6 +388,7 @@ class __$$AttachmentImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? message_id = null,
     Object? filename = null,
     Object? size = null,
     Object? url = null,
@@ -381,6 +398,10 @@ class __$$AttachmentImplCopyWithImpl<$Res>
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      message_id: null == message_id
+          ? _value.message_id
+          : message_id // ignore: cast_nullable_to_non_nullable
               as String,
       filename: null == filename
           ? _value.filename
@@ -407,6 +428,7 @@ class __$$AttachmentImplCopyWithImpl<$Res>
 class _$AttachmentImpl implements _Attachment {
   const _$AttachmentImpl(
       {required this.id,
+      required this.message_id,
       required this.filename,
       required this.size,
       required this.url,
@@ -418,6 +440,8 @@ class _$AttachmentImpl implements _Attachment {
   @override
   final String id;
   @override
+  final String message_id;
+  @override
   final String filename;
   @override
   final int size;
@@ -428,7 +452,7 @@ class _$AttachmentImpl implements _Attachment {
 
   @override
   String toString() {
-    return 'Attachment(id: $id, filename: $filename, size: $size, url: $url, content_type: $content_type)';
+    return 'Attachment(id: $id, message_id: $message_id, filename: $filename, size: $size, url: $url, content_type: $content_type)';
   }
 
   @override
@@ -437,6 +461,8 @@ class _$AttachmentImpl implements _Attachment {
         (other.runtimeType == runtimeType &&
             other is _$AttachmentImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.message_id, message_id) ||
+                other.message_id == message_id) &&
             (identical(other.filename, filename) ||
                 other.filename == filename) &&
             (identical(other.size, size) || other.size == size) &&
@@ -447,8 +473,8 @@ class _$AttachmentImpl implements _Attachment {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, filename, size, url, content_type);
+  int get hashCode => Object.hash(
+      runtimeType, id, message_id, filename, size, url, content_type);
 
   /// Create a copy of Attachment
   /// with the given fields replaced by the non-null parameter values.
@@ -469,6 +495,7 @@ class _$AttachmentImpl implements _Attachment {
 abstract class _Attachment implements Attachment {
   const factory _Attachment(
       {required final String id,
+      required final String message_id,
       required final String filename,
       required final int size,
       required final String url,
@@ -479,6 +506,8 @@ abstract class _Attachment implements Attachment {
 
   @override
   String get id;
+  @override
+  String get message_id;
   @override
   String get filename;
   @override
