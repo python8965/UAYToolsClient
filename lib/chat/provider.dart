@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http_parser/http_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,12 +15,10 @@ import '../tools.dart';
 part 'provider.g.dart';
 
 @riverpod
-Future<Attachment> attachment(AttachmentRef ref) async {
-  final response = await http.get(Uri.http(DEBUG_SERVER_LOCATION, '/attachment'));
+Future<Uint8List> attachment(AttachmentRef ref, String url) async {
+  final response = await http.get(Uri.http(DEBUG_SERVER_LOCATION, url));
 
-  final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-  return Attachment.fromJson(json);
+  return response.bodyBytes;
 }
 
 @riverpod
@@ -110,7 +109,7 @@ class MessagesRepository extends _$MessagesRepository {
       }
     }
 
-    List<UuidString> send_attachments = [];
+    List<Attachment> send_attachments = [];
 
     for (var attachment in message.attachment) {
       logger.i(attachment.toString());
@@ -120,7 +119,7 @@ class MessagesRepository extends _$MessagesRepository {
       if (response == null){
         return false;
       }else {
-        send_attachments.add(response.id);
+        send_attachments.add(response);
       }
     }
 

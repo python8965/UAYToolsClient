@@ -23,7 +23,7 @@ mixin _$Message {
   String get id => throw _privateConstructorUsedError;
   User get author => throw _privateConstructorUsedError;
   String get content => throw _privateConstructorUsedError;
-  List<String> get attachments => throw _privateConstructorUsedError;
+  List<Attachment> get attachments => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
 
   /// Serializes this Message to a JSON map.
@@ -44,7 +44,7 @@ abstract class $MessageCopyWith<$Res> {
       {String id,
       User author,
       String content,
-      List<String> attachments,
+      List<Attachment> attachments,
       DateTime timestamp});
 
   $UserCopyWith<$Res> get author;
@@ -87,7 +87,7 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
       attachments: null == attachments
           ? _value.attachments
           : attachments // ignore: cast_nullable_to_non_nullable
-              as List<String>,
+              as List<Attachment>,
       timestamp: null == timestamp
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
@@ -117,7 +117,7 @@ abstract class _$$MessageImplCopyWith<$Res> implements $MessageCopyWith<$Res> {
       {String id,
       User author,
       String content,
-      List<String> attachments,
+      List<Attachment> attachments,
       DateTime timestamp});
 
   @override
@@ -159,7 +159,7 @@ class __$$MessageImplCopyWithImpl<$Res>
       attachments: null == attachments
           ? _value._attachments
           : attachments // ignore: cast_nullable_to_non_nullable
-              as List<String>,
+              as List<Attachment>,
       timestamp: null == timestamp
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
@@ -175,7 +175,7 @@ class _$MessageImpl implements _Message {
       {required this.id,
       required this.author,
       required this.content,
-      required final List<String> attachments,
+      required final List<Attachment> attachments,
       required this.timestamp})
       : _attachments = attachments;
 
@@ -188,9 +188,9 @@ class _$MessageImpl implements _Message {
   final User author;
   @override
   final String content;
-  final List<String> _attachments;
+  final List<Attachment> _attachments;
   @override
-  List<String> get attachments {
+  List<Attachment> get attachments {
     if (_attachments is EqualUnmodifiableListView) return _attachments;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_attachments);
@@ -244,7 +244,7 @@ abstract class _Message implements Message {
       {required final String id,
       required final User author,
       required final String content,
-      required final List<String> attachments,
+      required final List<Attachment> attachments,
       required final DateTime timestamp}) = _$MessageImpl;
 
   factory _Message.fromJson(Map<String, dynamic> json) = _$MessageImpl.fromJson;
@@ -256,7 +256,7 @@ abstract class _Message implements Message {
   @override
   String get content;
   @override
-  List<String> get attachments;
+  List<Attachment> get attachments;
   @override
   DateTime get timestamp;
 

@@ -12,7 +12,7 @@ _$MessageImpl _$$MessageImplFromJson(Map<String, dynamic> json) =>
       author: User.fromJson(json['author'] as Map<String, dynamic>),
       content: json['content'] as String,
       attachments: (json['attachments'] as List<dynamic>)
-          .map((e) => e as String)
+          .map((e) => Attachment.fromJson(e as Map<String, dynamic>))
           .toList(),
       timestamp: DateTime.parse(json['timestamp'] as String),
     );

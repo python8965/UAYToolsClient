@@ -124,7 +124,13 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
                     ),
                     const SizedBox(height: 2),
                     OverflowBar(
-                      children: messageData.data.attachments.map((x) => x.).toList(),
+                      children: messageData.data.attachments.map((x)
+                      {
+                        //var async = ref.watch(attachmentProvider(x.url));
+
+                        return Text(x.filename);
+
+                      }).toList(),
                     )
                   ],
                 ),
