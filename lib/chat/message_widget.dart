@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:uay_tools/chat/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../chat.dart';
 import '../context_menu.dart';
+import '../schema.dart';
+import '../tools.dart';
 
 class MessageWidget extends ConsumerStatefulWidget{
   final MessageData messageData;
@@ -126,9 +130,29 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
                     OverflowBar(
                       children: messageData.data.attachments.map((x)
                       {
+                        final full_url = Uri.http(DEBUG_SERVER_LOCATION, x.url);
+
                         //var async = ref.watch(attachmentProvider(x.url));
 
-                        return Text(x.filename);
+                        final mediatype = MediaType.parse(x.content_type);
+
+                        if (mediatype. type == "image"){
+                          return GestureDetector(onTap: (){}, child: Image.network(full_url.toString(), width: 500, height: 250, fit: BoxFit.cover,));
+                        }
+
+
+                        return ElevatedButton(
+                          onPressed: () async {
+
+
+                            var bool = await launchUrl(full_url);
+
+                            if (!bool) {
+                              logger.w("launchUrl Failed");
+                            }
+                          },
+                          child: Text(x.filename),
+                        );
 
                       }).toList(),
                     )

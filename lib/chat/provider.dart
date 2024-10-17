@@ -68,7 +68,17 @@ class MessagesRepository extends _$MessagesRepository {
     }
   }
 
-  Future<bool> addMessage(EditingMessage message, MessageMetaData metadata) async {
+  Future<bool> addMessage(EditingMessage editingMessage, MessageMetaData metadata) async {
+    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/messages');
+
+    var header = {
+      "Content-Type": "application/json",
+    };
+
+    var body = jsonEncode(editingMessage.message);
+
+    var response = await http.post(uri, headers: header, body: body);
+
     Future<Attachment?> addAttachment(SendAttachment attachment) async {
       var header = {
         "Content-Type": "multipart/form-data; charset=utf-8",
@@ -80,6 +90,7 @@ class MessagesRepository extends _$MessagesRepository {
 
       var body = {
         "id" : attachment.id,
+        "message_id": editingMessage.message.id,
         "filename" :attachment.filename,
         "content_type": attachment.contentType.toString(),
         "size" : attachment.size
@@ -109,9 +120,9 @@ class MessagesRepository extends _$MessagesRepository {
       }
     }
 
-    List<Attachment> send_attachments = [];
+    List<Attachment> receivedAttachments = [];
 
-    for (var attachment in message.attachment) {
+    for (var attachment in editingMessage.attachment) {
       logger.i(attachment.toString());
 
       final response = await addAttachment(attachment);
@@ -119,24 +130,16 @@ class MessagesRepository extends _$MessagesRepository {
       if (response == null){
         return false;
       }else {
-        send_attachments.add(response);
+        receivedAttachments.add(response);
       }
     }
 
-    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/messages');
+    editingMessage.message = editingMessage.message.copyWith(attachments: receivedAttachments);
 
-    var header = {
-      "Content-Type": "application/json",
-    };
-
-    message.message = message.message.copyWith(attachments: send_attachments);
-
-    var body = jsonEncode(message.message);
-
-    var response = await http.post(uri, headers: header, body: body);
+    logger.i("received attachments ${receivedAttachments}");
 
     if (response.statusCode == 200) {
-      state = [...state.take(99), MessageData(data: message.message, metaData: metadata)];
+      state = [...state.take(99), MessageData(data: editingMessage.message, metaData: metadata)];
       return true;
     } else {
       return false;

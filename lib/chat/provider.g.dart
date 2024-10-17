@@ -156,7 +156,7 @@ class _AttachmentProviderElement
 }
 
 String _$messagesRepositoryHash() =>
-    r'23e9166f74237e4eb2b74464e512159bf9b227ab';
+    r'c422c469476470bf591e91dfa749bc1b2aa98657';
 
 /// See also [MessagesRepository].
 @ProviderFor(MessagesRepository)
