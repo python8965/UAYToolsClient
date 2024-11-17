@@ -4,6 +4,7 @@ name: deploy flutter web to github pages
 on:
   push:
     branches:
+      - master
       - main
 
 jobs:
