@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:http/http.dart' as http;
+import 'package:fetch_client/fetch_client.dart';
 import 'package:uuid/uuid.dart';
 
 import '../chat.dart';
@@ -16,7 +17,7 @@ part 'provider.g.dart';
 
 @riverpod
 Future<Uint8List> attachment(AttachmentRef ref, String url) async {
-  final response = await http.get(Uri.http(DEBUG_SERVER_LOCATION, url));
+  final response = await http.get(Uri.http(SERVER_LOCATION, url));
 
   return response.bodyBytes;
 }
@@ -31,7 +32,7 @@ class MessagesRepository extends _$MessagesRepository {
       "amount": '100',
     };
 
-    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/messages', queryParams);
+    Uri uri = Uri.http(SERVER_LOCATION, '/messages', queryParams);
 
     logger.d(uri.toString());
 
@@ -39,7 +40,7 @@ class MessagesRepository extends _$MessagesRepository {
       "Content-Type": "application/json; charset=UTF-8",
     };
 
-    var response = await http.get(uri, headers: header);
+    var response = await getClient().get(uri, headers: header);
 
     if (response.statusCode == 200) {
       var json = jsonDecode(response.body);
@@ -69,7 +70,7 @@ class MessagesRepository extends _$MessagesRepository {
   }
 
   Future<bool> addMessage(EditingMessage editingMessage, MessageMetaData metadata) async {
-    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/messages');
+    Uri uri = Uri.http(SERVER_LOCATION, '/messages');
 
     var header = {
       "Content-Type": "application/json",
@@ -77,14 +78,14 @@ class MessagesRepository extends _$MessagesRepository {
 
     var body = jsonEncode(editingMessage.message);
 
-    var response = await http.post(uri, headers: header, body: body);
+    var response = await getClient().post(uri, headers: header, body: body);
 
     Future<Attachment?> addAttachment(SendAttachment attachment) async {
       var header = {
         "Content-Type": "multipart/form-data; charset=utf-8",
       };
 
-      Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/attachment');
+      Uri uri = Uri.http(SERVER_LOCATION, '/attachment');
 
       var request = http.MultipartRequest('POST', uri);
 
@@ -148,7 +149,7 @@ class MessagesRepository extends _$MessagesRepository {
 
   Future<bool> removeMessage(MessageData message) async {
     Uri uri = Uri.http(
-      DEBUG_SERVER_LOCATION,
+      SERVER_LOCATION,
       '/messages/${message.data.id}',
     );
 
@@ -156,7 +157,7 @@ class MessagesRepository extends _$MessagesRepository {
       "Content-Type": "application/json",
     };
 
-    var response = await http.delete(uri, headers: header);
+    var response = await getClient().delete(uri, headers: header);
 
     if (response.statusCode == 200) {
       final index = state.indexWhere((x) => x.data.id == message.data.id);

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:fetch_client/fetch_client.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http_parser/http_parser.dart';
@@ -28,10 +30,15 @@ class SendAttachment {
   }
 }
 
+http.Client getClient() {
+  return http.Client();
+}
+
+
 @riverpod
 Future<User> getUser(GetUserRef ref) async {
   Future<User> createUser(String name) async{
-    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/user');
+    Uri uri = Uri.http(SERVER_LOCATION, '/user');
 
     var header = {
       "Content-Type": "application/json",
@@ -40,8 +47,8 @@ Future<User> getUser(GetUserRef ref) async {
     var body = jsonEncode({
       "username": name
     });
-
-    var response = await http.post(uri, headers: header, body: body );
+    
+    var response = await getClient().post(uri, headers: header, body: body );
 
     if (response.statusCode == 200) {
 
@@ -52,13 +59,13 @@ Future<User> getUser(GetUserRef ref) async {
   }
 
   Future<User> getUser() async{
-    Uri uri = Uri.http(DEBUG_SERVER_LOCATION, '/user');
+    Uri uri = Uri.http(SERVER_LOCATION, '/user');
 
     var header = {
       "Content-Type": "application/json",
     };
 
-    var response = await http.get(uri, headers: header );
+    var response = await getClient().get(uri, headers: header );
 
     if (response.statusCode == 200) {
       logger.d("found user");

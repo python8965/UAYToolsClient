@@ -130,7 +130,7 @@ class _MessageWidgetState extends ConsumerState<MessageWidget>{
                     OverflowBar(
                       children: messageData.data.attachments.map((x)
                       {
-                        final full_url = Uri.http(DEBUG_SERVER_LOCATION, x.url);
+                        final full_url = Uri.http(SERVER_LOCATION, x.url);
 
                         //var async = ref.watch(attachmentProvider(x.url));
 

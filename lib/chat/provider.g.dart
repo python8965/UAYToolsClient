@@ -6,7 +6,7 @@ part of 'provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$attachmentHash() => r'90292360eb3264273fc7a2b479f81a5809e607f8';
+String _$attachmentHash() => r'8434b5e54f19b307a3c9dff9e7b0d8f458542112';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -142,6 +142,8 @@ class AttachmentProvider extends AutoDisposeFutureProvider<Uint8List> {
   }
 }
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 mixin AttachmentRef on AutoDisposeFutureProviderRef<Uint8List> {
   /// The parameter `url` of this provider.
   String get url;
@@ -156,7 +158,7 @@ class _AttachmentProviderElement
 }
 
 String _$messagesRepositoryHash() =>
-    r'c422c469476470bf591e91dfa749bc1b2aa98657';
+    r'e89c43344bbeee5a9cc18e5f4616f841ee62e89d';
 
 /// See also [MessagesRepository].
 @ProviderFor(MessagesRepository)
@@ -173,4 +175,4 @@ final messagesRepositoryProvider =
 
 typedef _$MessagesRepository = AutoDisposeNotifier<List<MessageData>>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

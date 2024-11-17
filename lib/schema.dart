@@ -1,12 +1,13 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'dart:io' show Platform;
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 part 'schema.freezed.dart';
 part 'schema.g.dart';
 
 typedef UuidString = String;
 
-var DEBUG_SERVER_LOCATION = Platform.isAndroid ? "10.0.2.2:3000" :"localhost:3000";
+var DEBUG_SERVER_LOCATION = kIsWeb ? "127.0.0.1:3000" : Platform.isAndroid ? "10.0.2.2:3000" :"localhost:3000";
+var SERVER_LOCATION = DEBUG_SERVER_LOCATION;
 
 @freezed
 class Message with _$Message {
